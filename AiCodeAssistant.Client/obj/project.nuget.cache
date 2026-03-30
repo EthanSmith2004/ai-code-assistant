@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "ivYXVO5CBl0=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\detec\\AiCodeAssistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\detec\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.5\\microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

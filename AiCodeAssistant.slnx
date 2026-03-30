@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="AiCodeAssistant.API/AiCodeAssistant.API.csproj" />
+  <Project Path="AiCodeAssistant.Application/AiCodeAssistant.Application.csproj" />
+  <Project Path="AiCodeAssistant.Client/AiCodeAssistant.Client.csproj" />
+  <Project Path="AiCodeAssistant.Domain/AiCodeAssistant.Domain.csproj" />
+  <Project Path="AiCodeAssistant.Infrastructure/AiCodeAssistant.Infrastructure.csproj" />
+</Solution>
