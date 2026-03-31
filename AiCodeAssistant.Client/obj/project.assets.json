@@ -45,24 +45,31 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\detec\\.nuget\\packages\\": {}
+    "C:\\Users\\detec\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\detec\\AiCodeAssistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
+      "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
       "projectName": "AiCodeAssistant.Client",
-      "projectPath": "C:\\Users\\detec\\AiCodeAssistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
+      "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
       "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\detec\\AiCodeAssistant\\AiCodeAssistant.Client\\obj\\",
+      "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Client\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
