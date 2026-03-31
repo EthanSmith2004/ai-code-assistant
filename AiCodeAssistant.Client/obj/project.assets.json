@@ -11,6 +11,16 @@
         "buildMultiTargeting": {
           "buildMultiTargeting/Microsoft.AspNetCore.App.Internal.Assets.targets": {}
         }
+      },
+      "AiCodeAssistant.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/AiCodeAssistant.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AiCodeAssistant.Domain.dll": {}
+        }
       }
     }
   },
@@ -37,10 +47,16 @@
         "microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512",
         "microsoft.aspnetcore.app.internal.assets.nuspec"
       ]
+    },
+    "AiCodeAssistant.Domain/1.0.0": {
+      "type": "project",
+      "path": "../AiCodeAssistant.Domain/AiCodeAssistant.Domain.csproj",
+      "msbuildProject": "../AiCodeAssistant.Domain/AiCodeAssistant.Domain.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "AiCodeAssistant.Domain >= 1.0.0",
       "Microsoft.AspNetCore.App.Internal.Assets >= 10.0.5"
     ]
   },
@@ -75,7 +91,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+              "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

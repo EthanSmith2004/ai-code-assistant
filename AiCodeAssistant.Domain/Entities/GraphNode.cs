@@ -6,10 +6,10 @@ public class GraphNode
 
     public string Label { get; set; } = string.Empty;
 
-    public string Type { get; set; } = string.Empty;
+    public NodeType Type { get; set; }
     // Examples: Page, Endpoint, Controller, Service, Repository, Database
 
-    public string Layer { get; set; } = string.Empty;
+    public LayerType Layer { get; set; }
     // Examples: Frontend, API, Application, Data
 
     public string Description { get; set; } = string.Empty;

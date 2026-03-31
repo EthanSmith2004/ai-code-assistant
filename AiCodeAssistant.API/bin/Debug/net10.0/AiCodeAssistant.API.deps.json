@@ -9,6 +9,7 @@
       "AiCodeAssistant.API/1.0.0": {
         "dependencies": {
           "AiCodeAssistant.Application": "1.0.0",
+          "AiCodeAssistant.Domain": "1.0.0",
           "AiCodeAssistant.Infrastructure": "1.0.0",
           "Microsoft.AspNetCore.OpenApi": "10.0.5",
           "Swashbuckle.AspNetCore": "10.1.7"

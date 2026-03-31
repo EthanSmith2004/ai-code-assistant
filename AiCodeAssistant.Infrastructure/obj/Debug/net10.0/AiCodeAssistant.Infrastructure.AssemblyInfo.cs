@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AiCodeAssistant.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0347960a6a23a73780caadd8521d0860660ee4c6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23506ba3ee3b11c714deb606dcf49f3674039fd7")]
 [assembly: System.Reflection.AssemblyProductAttribute("AiCodeAssistant.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AiCodeAssistant.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

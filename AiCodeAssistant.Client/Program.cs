@@ -1,10 +1,15 @@
 using AiCodeAssistant.Client.Components;
+using AiCodeAssistant.Client.Services.Managers;
+using AiCodeAssistant.Client.Services.Rest;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddScoped<GraphRestService>();
+builder.Services.AddScoped<GraphServiceManager>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -16,7 +21,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

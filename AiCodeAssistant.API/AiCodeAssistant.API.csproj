@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AiCodeAssistant.Application\AiCodeAssistant.Application.csproj" />
     <ProjectReference Include="..\AiCodeAssistant.Infrastructure\AiCodeAssistant.Infrastructure.csproj" />
+    <ProjectReference Include="..\AiCodeAssistant.Domain\AiCodeAssistant.Domain.csproj" />
   </ItemGroup>
 
 </Project>

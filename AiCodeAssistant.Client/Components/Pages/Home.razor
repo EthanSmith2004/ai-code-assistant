@@ -1,7 +1,42 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
+@using AiCodeAssistant.Domain.Entities
+@inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
+@inject IJSRuntime JS
 
-<h1>Hello, world!</h1>
+<h1>Codebase Intelligence</h1>
+<p>Visualizing system structure and flows</p>
 
-Welcome to your new app.
+<button @onclick="LoadData">Load Graph</button>
+
+<div id="graph" style="height:600px; border:1px solid #444; margin-top:20px; background:#0f1117;"></div>
+
+@if (nodes.Count > 0)
+{
+    <h3>Nodes by Layer</h3>
+
+    @foreach (var group in nodes.GroupBy(n => n.Layer))
+    {
+        <h4>@group.Key</h4>
+        <ul>
+            @foreach (var node in group)
+            {
+                <li>@node.Label (@node.Type)</li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    private List<GraphNode> nodes = new();
+    private List<GraphEdge> edges = new();
+
+    private async Task LoadData()
+    {
+        nodes = await GraphServiceManager.GetNodesAsync();
+        edges = await GraphServiceManager.GetEdgesAsync();
+
+        await JS.InvokeVoidAsync("graphInterop.renderGraph", nodes, edges);
+    }
+}

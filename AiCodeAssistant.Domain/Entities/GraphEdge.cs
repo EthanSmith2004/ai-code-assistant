@@ -8,6 +8,6 @@ public class GraphEdge
 
     public string TargetId { get; set; } = string.Empty;
 
-    public string Relationship { get; set; } = string.Empty;
+    public RelationshipType Relationship { get; set; }
     // Examples: Calls, Uses, MapsTo, ReadsFrom, WritesTo, Queries, Returns
 }

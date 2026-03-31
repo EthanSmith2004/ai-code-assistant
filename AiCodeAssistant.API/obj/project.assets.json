@@ -545,6 +545,7 @@
   "projectFileDependencyGroups": {
     "net10.0": [
       "AiCodeAssistant.Application >= 1.0.0",
+      "AiCodeAssistant.Domain >= 1.0.0",
       "AiCodeAssistant.Infrastructure >= 1.0.0",
       "Microsoft.AspNetCore.OpenApi >= 10.0.5",
       "Swashbuckle.AspNetCore >= 10.1.7"
@@ -584,6 +585,9 @@
           "projectReferences": {
             "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
               "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
+            },
+            "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+              "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
             },
             "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj": {
               "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj"
