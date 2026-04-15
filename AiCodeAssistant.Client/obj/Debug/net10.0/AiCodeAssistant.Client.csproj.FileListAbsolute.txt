@@ -270,7 +270,6 @@ C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\r
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\AiCodeAssistant.Client.pdb
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\AiCodeAssistant.Client.genruntimeconfig.cache
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\ref\AiCodeAssistant.Client.dll
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\64ecyvpjr4-{0}-gfwmmzbapr-gfwmmzbapr.gz
 C:\Users\ethan\Fork\ai-code-assistant\.build-validation\client\appsettings.Development.json
 C:\Users\ethan\Fork\ai-code-assistant\.build-validation\client\appsettings.json
 C:\Users\ethan\Fork\ai-code-assistant\.build-validation\client\AiCodeAssistant.Client.staticwebassets.runtime.json
@@ -282,5 +281,6 @@ C:\Users\ethan\Fork\ai-code-assistant\.build-validation\client\AiCodeAssistant.C
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Dashboard.razor.rz.scp.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\ProjectHistory.razor.rz.scp.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Settings.razor.rz.scp.css
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-dyq091yemv-dyq091yemv.gz
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-dyq091yemv-dyq091yemv.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\64ecyvpjr4-{0}-9vcz0ltbht-9vcz0ltbht.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-awjucjod3i-awjucjod3i.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-awjucjod3i-awjucjod3i.gz

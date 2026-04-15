@@ -58,6 +58,34 @@
     white-space: nowrap;
 }
 
+.secondary-link {
+    border: 1px solid rgba(174, 184, 204, 0.18);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+    color: #dbeafe;
+    font-weight: 800;
+    padding: 0.56rem 0.74rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.primary-link.inline,
+.secondary-link.inline {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 0.7rem;
+}
+
+.primary-link:hover,
+.primary-link:focus-visible,
+.secondary-link:hover,
+.secondary-link:focus-visible {
+    border-color: rgba(103, 232, 249, 0.44);
+    color: #f8fafc;
+    outline: none;
+}
+
 .history-layout {
     display: grid;
     grid-template-columns: minmax(230px, 320px) minmax(0, 1fr);
@@ -79,7 +107,10 @@
     display: grid;
     align-content: start;
     gap: 0.45rem;
+    max-height: calc(100dvh - 8rem);
+    overflow: auto;
     padding: 0.55rem;
+    scrollbar-gutter: stable;
 }
 
 .project-row {
@@ -92,6 +123,10 @@
     color: #f2f5fb;
     padding: 0.72rem;
     text-align: left;
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
 }
 
 .project-row.selected,
@@ -99,6 +134,19 @@
 .project-row:focus-visible {
     border-color: rgba(103, 232, 249, 0.42);
     outline: none;
+}
+
+.project-row.selected {
+    background:
+        linear-gradient(90deg, rgba(103, 232, 249, 0.11), rgba(52, 211, 153, 0.08)),
+        rgba(18, 24, 35, 0.9);
+    box-shadow:
+        inset 3px 0 0 #67e8f9,
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.project-row:hover {
+    transform: translateY(-1px);
 }
 
 .project-row span {
@@ -110,13 +158,24 @@
     padding: 0.95rem;
 }
 
+.analysis-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+
 .analysis-panel h2 {
     font-size: 1.12rem;
 }
 
 .source-text {
-    margin: 0.35rem 0 0.85rem;
-    overflow-wrap: anywhere;
+    max-width: min(100%, 46rem);
+    margin: 0.35rem 0 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .analysis-list {
@@ -130,7 +189,30 @@
     border: 1px solid rgba(174, 184, 204, 0.12);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.035);
+    color: inherit;
+    cursor: pointer;
     padding: 0.78rem;
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        transform 160ms ease;
+}
+
+.analysis-item:hover,
+.analysis-item:focus-visible {
+    border-color: rgba(103, 232, 249, 0.34);
+    background:
+        linear-gradient(180deg, rgba(103, 232, 249, 0.07), rgba(255, 255, 255, 0)),
+        rgba(255, 255, 255, 0.045);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.analysis-item.selected {
+    border-color: rgba(52, 211, 153, 0.34);
+    background:
+        linear-gradient(90deg, rgba(52, 211, 153, 0.08), rgba(103, 232, 249, 0.06)),
+        rgba(255, 255, 255, 0.04);
 }
 
 .analysis-item strong {
@@ -155,6 +237,61 @@
     font-weight: 850;
 }
 
+.analysis-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.text-action {
+    border: 1px solid rgba(174, 184, 204, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+    color: #dbeafe;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 850;
+    padding: 0.42rem 0.55rem;
+    text-decoration: none;
+}
+
+.text-action:hover,
+.text-action:focus-visible {
+    border-color: rgba(103, 232, 249, 0.44);
+    color: #f8fafc;
+    outline: none;
+}
+
+.selected-analysis-summary,
+.analysis-empty-state,
+.empty-panel {
+    border: 1px solid rgba(174, 184, 204, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    padding: 0.8rem;
+}
+
+.analysis-empty-state,
+.empty-panel {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.selected-analysis-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.selected-analysis-summary span,
+.empty-panel span {
+    color: #a8b0c1;
+}
+
 .page-state {
     margin: 0;
     padding: 0.85rem;
@@ -172,8 +309,18 @@
         flex-direction: column;
     }
 
+    .analysis-panel-header,
+    .selected-analysis-summary {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
     .history-layout,
     .analysis-item dl {
         grid-template-columns: 1fr;
+    }
+
+    .project-list {
+        max-height: none;
     }
 }

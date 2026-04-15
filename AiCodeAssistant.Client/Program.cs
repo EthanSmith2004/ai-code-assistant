@@ -1,4 +1,5 @@
 using AiCodeAssistant.Client.Components;
+using AiCodeAssistant.Client.Services;
 using AiCodeAssistant.Client.Services.Managers;
 using AiCodeAssistant.Client.Services.Rest;
 
@@ -10,6 +11,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<GraphRestService>();
 builder.Services.AddScoped<GraphServiceManager>();
+builder.Services.AddScoped<UserPreferencesService>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

@@ -573,9 +573,21 @@ public class GenericCodebaseAnalyzer : ICodebaseAnalyzer
                 ? segments[explainSegmentIndex + 1]
                 : explainSegment["explain".Length..].Trim('-', '_', ' ');
 
-            return string.IsNullOrWhiteSpace(target)
-                ? "Explain Flow"
-                : $"Explain {HumanizeRouteSegment(target)} Flow";
+            if (string.IsNullOrWhiteSpace(target))
+            {
+                return "Explain Flow";
+            }
+
+            var humanizedTarget = HumanizeRouteSegment(target);
+
+            if (humanizedTarget.Equals("Flow", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Explain Flow";
+            }
+
+            return humanizedTarget.EndsWith(" Flow", StringComparison.OrdinalIgnoreCase)
+                ? $"Explain {humanizedTarget}"
+                : $"Explain {humanizedTarget} Flow";
         }
 
         if (segments.Count == 0)

@@ -24,7 +24,11 @@
     }
     else if (!projects.Any())
     {
-        <p class="page-state">No saved projects yet.</p>
+        <div class="page-state empty-panel">
+            <strong>No saved projects yet.</strong>
+            <span>Scan a project in Graph Explorer, then save the analysis snapshot here.</span>
+            <a class="primary-link inline" href="/graph">Analyze New Project</a>
+        </div>
     }
     else
     {
@@ -41,10 +45,15 @@
             </section>
 
             <section class="analysis-panel">
-                <h2>@selectedProject?.Name</h2>
                 @if (selectedProject is not null)
                 {
-                    <p class="source-text">@selectedProject.SourceIdentifier</p>
+                    <div class="analysis-panel-header">
+                        <div>
+                            <h2>@selectedProject.Name</h2>
+                            <p class="source-text" title="@selectedProject.SourceIdentifier">@CreateReadableSource(selectedProject.SourceIdentifier)</p>
+                        </div>
+                        <a class="secondary-link" href="@CreateGraphExplorerLink(selectedProject)">Open in Graph Explorer</a>
+                    </div>
                 }
 
                 @if (isLoadingAnalyses)
@@ -53,14 +62,32 @@
                 }
                 else if (!selectedAnalyses.Any())
                 {
-                    <p class="empty-state">No analyses saved for this project yet.</p>
+                    <div class="analysis-empty-state">
+                        <p class="empty-state">No analyses saved for this project yet.</p>
+                        @if (selectedProject is not null)
+                        {
+                            <a class="secondary-link inline" href="@CreateGraphExplorerLink(selectedProject)">Open in Graph Explorer</a>
+                        }
+                    </div>
                 }
                 else
                 {
+                    @if (selectedAnalysis is not null)
+                    {
+                        <div class="selected-analysis-summary" role="status">
+                            <span>Viewing analysis</span>
+                            <strong>@FormatDate(selectedAnalysis.CreatedAt)</strong>
+                        </div>
+                    }
+
                     <div class="analysis-list">
                         @foreach (var analysis in selectedAnalyses)
                         {
-                            <article class="analysis-item">
+                            <article class="analysis-item @(selectedAnalysisId == analysis.Id ? "selected" : null)"
+                                     role="button"
+                                     tabindex="0"
+                                     @onclick="() => ViewAnalysis(analysis)"
+                                     @onkeydown="args => HandleAnalysisKeyDown(args, analysis)">
                                 <div>
                                     <strong>@analysis.Summary</strong>
                                     <span>@FormatDate(analysis.CreatedAt)</span>
@@ -83,6 +110,22 @@
                                         <dd>@analysis.EndpointCount</dd>
                                     </div>
                                 </dl>
+                                <div class="analysis-actions">
+                                    <button type="button"
+                                            class="text-action"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => ViewAnalysis(analysis)">
+                                        View Analysis
+                                    </button>
+                                    @if (selectedProject is not null)
+                                    {
+                                        <a class="text-action"
+                                           href="@CreateGraphExplorerLink(selectedProject)"
+                                           @onclick:stopPropagation="true">
+                                            Open in Graph Explorer
+                                        </a>
+                                    }
+                                </div>
                             </article>
                         }
                     </div>
@@ -96,7 +139,9 @@
     private List<ProjectDto> projects = new();
     private List<ProjectAnalysisDto> selectedAnalyses = new();
     private ProjectDto? selectedProject;
+    private ProjectAnalysisDto? selectedAnalysis;
     private Guid? selectedProjectId;
+    private Guid? selectedAnalysisId;
     private bool isLoading = true;
     private bool isLoadingAnalyses;
     private string loadError = string.Empty;
@@ -126,6 +171,9 @@
         selectedProject = project;
         selectedProjectId = project.Id;
         selectedAnalyses = new List<ProjectAnalysisDto>();
+        selectedAnalysis = null;
+        selectedAnalysisId = null;
+        loadError = string.Empty;
         isLoadingAnalyses = true;
 
         try
@@ -138,12 +186,67 @@
         }
         finally
         {
+            selectedAnalysis = selectedAnalyses.FirstOrDefault();
+            selectedAnalysisId = selectedAnalysis?.Id;
             isLoadingAnalyses = false;
+        }
+    }
+
+    private void ViewAnalysis(ProjectAnalysisDto analysis)
+    {
+        selectedAnalysis = analysis;
+        selectedAnalysisId = analysis.Id;
+    }
+
+    private void HandleAnalysisKeyDown(KeyboardEventArgs args, ProjectAnalysisDto analysis)
+    {
+        if (args.Key is "Enter" or " ")
+        {
+            ViewAnalysis(analysis);
         }
     }
 
     private static string FormatDate(DateTime date)
     {
         return date.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+
+    private static string CreateGraphExplorerLink(ProjectDto project)
+    {
+        if (string.IsNullOrWhiteSpace(project.SourceIdentifier) ||
+            project.SourceIdentifier.StartsWith("mock://", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/graph";
+        }
+
+        return $"/graph?source={Uri.EscapeDataString(project.SourceIdentifier)}";
+    }
+
+    private static string CreateReadableSource(string sourceIdentifier)
+    {
+        if (string.IsNullOrWhiteSpace(sourceIdentifier))
+        {
+            return "No source path saved.";
+        }
+
+        if (sourceIdentifier.StartsWith("mock://", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Mock graph workspace";
+        }
+
+        var trimmedSource = sourceIdentifier.Trim();
+
+        if (trimmedSource.Length <= 68)
+        {
+            return trimmedSource;
+        }
+
+        var parts = trimmedSource
+            .Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        return parts.Count >= 3
+            ? $"{parts[0]}\\...\\{parts[^2]}\\{parts[^1]}"
+            : $"{trimmedSource[..28]}...{trimmedSource[^28..]}";
     }
 }

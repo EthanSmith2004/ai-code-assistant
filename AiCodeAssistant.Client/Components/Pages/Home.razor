@@ -7,6 +7,7 @@
 @using AiCodeAssistant.Domain.Entities
 @using AiCodeAssistant.Domain.Graph
 @implements IDisposable
+@inject AiCodeAssistant.Client.Services.UserPreferencesService UserPreferencesService
 @inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
 @inject IJSRuntime JS
 
@@ -38,8 +39,14 @@
                 {
                     <label class="scan-path-field">
                         <span>Root path</span>
-                        <input @bind="scanRootPath" placeholder="d:\Fork\ai-code-assistant" />
+                        <input @bind="scanRootPath" @bind:event="oninput" placeholder="d:\Fork\ai-code-assistant" />
+                        <small class="path-preview" title="@scanRootPath">@GetReadableRootPath()</small>
                     </label>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(sourceHintMessage))
+                {
+                    <p class="source-hint">@sourceHintMessage</p>
                 }
 
                 @if (!string.IsNullOrWhiteSpace(loadError))
@@ -183,10 +190,33 @@
 
         @if (!string.IsNullOrWhiteSpace(saveStatusMessage) || !string.IsNullOrWhiteSpace(saveError))
         {
-            <div class="save-status-bar @(string.IsNullOrWhiteSpace(saveError) ? "success" : "error")">
-                @(string.IsNullOrWhiteSpace(saveError) ? saveStatusMessage : saveError)
+            <div class="save-status-bar @(string.IsNullOrWhiteSpace(saveError) ? "success" : "error")" role="status">
+                <span>@(string.IsNullOrWhiteSpace(saveError) ? saveStatusMessage : saveError)</span>
+                @if (string.IsNullOrWhiteSpace(saveError))
+                {
+                    <a href="/history">View history</a>
+                }
             </div>
         }
+
+        <section class="workflow-strip" aria-label="Graph Explorer workflow">
+            <div class="workflow-step @GetWorkflowStepClass(1)">
+                <span>1</span>
+                <strong>Scan</strong>
+            </div>
+            <div class="workflow-step @GetWorkflowStepClass(2)">
+                <span>2</span>
+                <strong>Select flow</strong>
+            </div>
+            <div class="workflow-step @GetWorkflowStepClass(3)">
+                <span>3</span>
+                <strong>Explore</strong>
+            </div>
+            <div class="workflow-step @GetWorkflowStepClass(4)">
+                <span>4</span>
+                <strong>Save</strong>
+            </div>
+        </section>
 
         <section class="graph-viewport">
             <div class="graph-stage">
@@ -263,6 +293,18 @@
                 <span class="panel-kicker">Selection</span>
                 <h2>Details</h2>
             </div>
+            @if (selectedNode is not null)
+            {
+                <span class="selection-badge">Selected node</span>
+            }
+            else if (selectedFlow is not null)
+            {
+                <span class="selection-badge">Focused flow</span>
+            }
+            else if (selectedEndpoint is not null)
+            {
+                <span class="selection-badge">Endpoint path</span>
+            }
         </div>
 
         <div class="panel-body">
@@ -707,6 +749,9 @@
 </div>
 
 @code {
+    [Microsoft.AspNetCore.Components.SupplyParameterFromQuery(Name = "source")]
+    public string? SourceIdentifier { get; set; }
+
     private List<GraphNode> nodes = new();
     private List<GraphEdge> edges = new();
     private List<CodeFlow> flows = new();
@@ -718,6 +763,8 @@
     private GraphViewMode graphViewMode = GraphViewMode.Full;
     private string selectedLayout = "breadthfirst";
     private string scanRootPath = @"d:\Fork\ai-code-assistant";
+    private string? appliedSourceIdentifier;
+    private string sourceHintMessage = string.Empty;
     private string loadError = string.Empty;
     private GraphNode? selectedNode;
     private CodeFlow? selectedFlow;
@@ -737,6 +784,31 @@
     private DotNetObjectReference<Home>? dotNetReference;
 
     private bool CanSaveAnalysis => nodes.Any() && !isSavingAnalysis;
+    private bool HasActiveGraphSelection => selectedNode is not null || selectedFlow is not null || selectedEndpoint is not null;
+    private bool HasSavedCurrentGraph => !string.IsNullOrWhiteSpace(saveStatusMessage);
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(SourceIdentifier) ||
+            string.Equals(SourceIdentifier, appliedSourceIdentifier, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        appliedSourceIdentifier = SourceIdentifier;
+        ApplySourceIdentifier(SourceIdentifier);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        selectedLayout = await UserPreferencesService.GetDefaultGraphLayoutAsync();
+        StateHasChanged();
+    }
 
     private async Task LoadData()
     {
@@ -759,6 +831,7 @@
             selectedEndpoint = null;
             graphViewMode = GraphViewMode.Full;
             ClearSaveStatus();
+            sourceHintMessage = string.Empty;
             ClearNodeExplanation();
             ClearFlowExplanation();
             ClearEndpointExplanation();
@@ -809,10 +882,35 @@
         selectedFlow = null;
         selectedEndpoint = null;
         loadError = string.Empty;
+        sourceHintMessage = string.Empty;
         ClearSaveStatus();
         ClearNodeExplanation();
         ClearFlowExplanation();
         ClearEndpointExplanation();
+    }
+
+    private void ApplySourceIdentifier(string sourceIdentifier)
+    {
+        selectedNode = null;
+        selectedFlow = null;
+        selectedEndpoint = null;
+        graphViewMode = GraphViewMode.Full;
+        loadError = string.Empty;
+        ClearSaveStatus();
+        ClearNodeExplanation();
+        ClearFlowExplanation();
+        ClearEndpointExplanation();
+
+        if (sourceIdentifier.StartsWith("mock://", StringComparison.OrdinalIgnoreCase))
+        {
+            graphMode = WorkspaceGraphMode.Mock;
+            sourceHintMessage = "Opened a saved mock workspace. Load the mock graph to explore it again.";
+            return;
+        }
+
+        graphMode = WorkspaceGraphMode.Scanned;
+        scanRootPath = sourceIdentifier;
+        sourceHintMessage = "Loaded this saved project path. Scan it to refresh the graph explorer.";
     }
 
     private string GetLoadButtonText()
@@ -834,6 +932,50 @@
         return graphMode == WorkspaceGraphMode.Scanned
             ? "No ASP.NET Core endpoints detected yet."
             : "No endpoints available.";
+    }
+
+    private string GetWorkflowStepClass(int step)
+    {
+        return step switch
+        {
+            1 => nodes.Any() ? "complete" : "active",
+            2 => !nodes.Any() ? string.Empty : HasActiveGraphSelection ? "complete" : "active",
+            3 => HasActiveGraphSelection ? "active" : string.Empty,
+            4 => HasSavedCurrentGraph ? "complete" : nodes.Any() ? "active" : string.Empty,
+            _ => string.Empty
+        };
+    }
+
+    private string GetReadableRootPath()
+    {
+        return CreateCompactPath(scanRootPath);
+    }
+
+    private static string CreateCompactPath(string path, int maxLength = 58)
+    {
+        var trimmedPath = path.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedPath))
+        {
+            return "No root path selected.";
+        }
+
+        if (trimmedPath.Length <= maxLength)
+        {
+            return trimmedPath;
+        }
+
+        var parts = trimmedPath
+            .Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        if (parts.Count >= 3)
+        {
+            return $"{parts[0]}\\...\\{parts[^2]}\\{parts[^1]}";
+        }
+
+        var edgeLength = Math.Max((maxLength - 3) / 2, 12);
+        return $"{trimmedPath[..edgeLength]}...{trimmedPath[^edgeLength..]}";
     }
 
     private string GetNodeSummary(GraphNode node)
@@ -898,6 +1040,15 @@
     {
         selectedLayout = NormalizeLayout(args.Value?.ToString());
 
+        try
+        {
+            await UserPreferencesService.SaveDefaultGraphLayoutAsync(selectedLayout);
+        }
+        catch (JSException)
+        {
+            // The graph can still switch layouts if browser storage is unavailable.
+        }
+
         if (nodes.Any())
         {
             await RenderCurrentGraphAsync();
@@ -906,9 +1057,7 @@
 
     private static string NormalizeLayout(string? layout)
     {
-        return string.Equals(layout, "cose", StringComparison.OrdinalIgnoreCase)
-            ? "cose"
-            : "breadthfirst";
+        return AiCodeAssistant.Client.Services.UserPreferencesService.NormalizeGraphLayout(layout);
     }
 
     private async Task SaveCurrentAnalysisAsync()

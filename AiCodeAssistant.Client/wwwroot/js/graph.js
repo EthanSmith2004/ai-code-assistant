@@ -16,11 +16,12 @@ const focusClassNames = 'selected-node neighbor-node connected-edge dimmed-eleme
 const graphMotion = {
     loadDuration: 320,
     focusDuration: 230,
-    loadPadding: 52,
-    focusPadding: 46,
-    fullMinZoom: 0.28,
-    focusMinZoom: 0.5,
-    zoomStep: 1.1,
+    loadPadding: 62,
+    focusPadding: 54,
+    fullMinZoom: 0.34,
+    focusMinZoom: 0.58,
+    zoomStep: 1.12,
+    trackpadZoomSensitivity: 0.004,
     panStep: 72,
     layoutSettleDelay: 48,
     fitRetryDelay: 72,
@@ -61,6 +62,19 @@ const normalizeEnum = (value, names, fallback) => {
     return fallback;
 };
 
+const formatRelationshipLabel = relationship => {
+    if (!relationship) {
+        return '';
+    }
+
+    return relationship
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+        .replace(/^./, firstCharacter => firstCharacter.toUpperCase());
+};
+
 const getOption = (options, name, fallback) => {
     const pascalName = name.charAt(0).toUpperCase() + name.slice(1);
     return options?.[name] ?? options?.[pascalName] ?? fallback;
@@ -81,11 +95,11 @@ const createLayoutOptions = (layoutName, viewMode) => {
             animationEasing: graphMotion.easing,
             fit: false,
             padding,
-            nodeRepulsion: focusView ? 3200 : 4700,
-            idealEdgeLength: focusView ? 72 : 98,
+            nodeRepulsion: focusView ? 3800 : 5600,
+            idealEdgeLength: focusView ? 96 : 128,
             edgeElasticity: 150,
             gravity: focusView ? 1 : 0.86,
-            componentSpacing: focusView ? 28 : 44,
+            componentSpacing: focusView ? 38 : 58,
             randomize: false
         };
     }
@@ -98,7 +112,7 @@ const createLayoutOptions = (layoutName, viewMode) => {
         animationEasing: graphMotion.easing,
         fit: false,
         padding,
-        spacingFactor: focusView ? 0.82 : 1.06,
+        spacingFactor: focusView ? 0.98 : 1.24,
         nodeDimensionsIncludeLabels: true
     };
 };
@@ -417,6 +431,18 @@ const attachWheelNavigation = element => {
         }
 
         event.preventDefault();
+
+        if (event.ctrlKey || event.metaKey) {
+            const bounds = element.getBoundingClientRect();
+            const renderedPosition = {
+                x: event.clientX - bounds.left,
+                y: event.clientY - bounds.top
+            };
+            const zoomFactor = Math.exp(-event.deltaY * graphMotion.trackpadZoomSensitivity);
+            zoomGraphAtRenderedPosition(zoomFactor, renderedPosition);
+            return;
+        }
+
         const pan = currentGraph.pan();
         const horizontalDelta = event.shiftKey ? event.deltaY : event.deltaX;
 
@@ -560,6 +586,17 @@ const zoomGraph = factor => {
         return;
     }
 
+    zoomGraphAtRenderedPosition(factor, {
+        x: currentGraph.width() / 2,
+        y: currentGraph.height() / 2
+    });
+};
+
+const zoomGraphAtRenderedPosition = (factor, renderedPosition) => {
+    if (!currentGraph || !Number.isFinite(factor) || factor <= 0) {
+        return;
+    }
+
     const nextZoom = clampValue(
         currentGraph.zoom() * factor,
         currentGraph.minZoom(),
@@ -568,8 +605,8 @@ const zoomGraph = factor => {
     currentGraph.zoom({
         level: nextZoom,
         renderedPosition: {
-            x: currentGraph.width() / 2,
-            y: currentGraph.height() / 2
+            x: clampValue(renderedPosition?.x ?? currentGraph.width() / 2, 0, currentGraph.width()),
+            y: clampValue(renderedPosition?.y ?? currentGraph.height() / 2, 0, currentGraph.height())
         }
     });
     setGraphPan(currentGraph, currentGraph.pan().x, currentGraph.pan().y);
@@ -637,13 +674,15 @@ const normalizeNode = node => {
 
 const normalizeEdge = edge => {
     const relationship = normalizeEnum(readValue(edge, 'relationship'), relationshipNames, '');
+    const displayRelationship = formatRelationshipLabel(relationship);
 
     return {
         data: {
             id: readValue(edge, 'id'),
             source: readValue(edge, 'sourceId'),
             target: readValue(edge, 'targetId'),
-            relationship
+            relationship,
+            displayRelationship
         }
     };
 };
@@ -770,26 +809,32 @@ const graphStyle = [
         style: {
             'curve-style': 'taxi',
             'taxi-direction': 'downward',
-            'taxi-turn': 10,
-            'taxi-turn-min-distance': 10,
+            'taxi-turn': 18,
+            'taxi-turn-min-distance': 20,
             'line-color': '#4b5563',
             'target-arrow-color': '#94a3b8',
             'target-arrow-shape': 'triangle',
             'arrow-scale': 0.95,
             'width': 2,
-            'label': 'data(relationship)',
+            'label': 'data(displayRelationship)',
             'font-family': 'Inter, Segoe UI, sans-serif',
-            'font-size': '8.5px',
-            'font-weight': 650,
-            'color': '#dbeafe',
-            'text-background-color': '#05070b',
-            'text-background-opacity': 0.9,
-            'text-background-padding': 3,
-            'text-rotation': 'autorotate',
-            'text-margin-y': -8,
+            'font-size': '10.4px',
+            'font-weight': 780,
+            'color': '#f8fafc',
+            'text-wrap': 'wrap',
+            'text-max-width': 96,
+            'text-background-color': '#050915',
+            'text-background-opacity': 0.98,
+            'text-background-padding': 5,
+            'text-background-shape': 'roundrectangle',
+            'text-border-color': '#334155',
+            'text-border-width': 1,
+            'text-border-opacity': 0.92,
+            'text-rotation': 'none',
+            'text-margin-y': -14,
             'opacity': 0.76,
-            'text-opacity': 0.78,
-            'min-zoomed-font-size': 6,
+            'text-opacity': 0.92,
+            'min-zoomed-font-size': 8.4,
             'transition-property': 'line-color, target-arrow-color, width, opacity, text-opacity, color',
             'transition-duration': '180ms',
             'transition-timing-function': 'ease-in-out'
@@ -830,19 +875,19 @@ const graphStyle = [
             'width': 1.25,
             'color': '#94a3b8',
             'opacity': 0.42,
-            'text-opacity': 0.45
+            'text-opacity': 0.34
         }
     },
     {
         selector: 'node.selected-node',
         style: {
-            'border-color': '#ffffff',
-            'border-width': 4,
-            'underlay-color': '#93c5fd',
-            'underlay-opacity': 0.3,
-            'underlay-padding': 14,
+            'border-color': '#f8fafc',
+            'border-width': 5,
+            'underlay-color': '#38bdf8',
+            'underlay-opacity': 0.42,
+            'underlay-padding': 18,
             'opacity': 1,
-            'z-index': 30
+            'z-index': 40
         }
     },
     {

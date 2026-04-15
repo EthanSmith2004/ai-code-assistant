@@ -1,4 +1,7 @@
 @page "/settings"
+@rendermode InteractiveServer
+
+@inject AiCodeAssistant.Client.Services.UserPreferencesService UserPreferencesService
 
 <section class="settings-page">
     <header class="page-heading">
@@ -10,6 +13,32 @@
     </header>
 
     <div class="settings-grid">
+        <section class="settings-panel">
+            <h2>Graph Preferences</h2>
+            <p class="settings-note">Choose the layout Graph Explorer uses when it first opens.</p>
+
+            <label class="settings-field">
+                <span>Default graph layout</span>
+                <select @bind="defaultGraphLayout" disabled="@isLoadingPreference">
+                    <option value="breadthfirst">Layered</option>
+                    <option value="cose">Organic</option>
+                </select>
+            </label>
+
+            <div class="settings-actions">
+                <button type="button"
+                        class="primary-button"
+                        @onclick="SaveGraphPreferencesAsync"
+                        disabled="@(isLoadingPreference || isSavingPreference)">
+                    @(isSavingPreference ? "Saving..." : "Save preference")
+                </button>
+                @if (!string.IsNullOrWhiteSpace(preferenceStatus))
+                {
+                    <span class="settings-status @(preferenceStatusIsError ? "error" : "success")">@preferenceStatus</span>
+                }
+            </div>
+        </section>
+
         <section class="settings-panel">
             <h2>Runtime</h2>
             <dl>
@@ -29,7 +58,7 @@
         </section>
 
         <section class="settings-panel">
-            <h2>Roadmap</h2>
+            <h2>Workspace Scope</h2>
             <dl>
                 <div>
                     <dt>Authentication</dt>
@@ -47,3 +76,58 @@
         </section>
     </div>
 </section>
+
+@code {
+    private string defaultGraphLayout = "breadthfirst";
+    private bool isLoadingPreference = true;
+    private bool isSavingPreference;
+    private bool preferenceStatusIsError;
+    private string preferenceStatus = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            defaultGraphLayout = await UserPreferencesService.GetDefaultGraphLayoutAsync();
+        }
+        catch (Exception exception)
+        {
+            preferenceStatusIsError = true;
+            preferenceStatus = $"Could not load preference: {exception.Message}";
+        }
+        finally
+        {
+            isLoadingPreference = false;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task SaveGraphPreferencesAsync()
+    {
+        isSavingPreference = true;
+        preferenceStatus = string.Empty;
+        preferenceStatusIsError = false;
+
+        try
+        {
+            defaultGraphLayout = AiCodeAssistant.Client.Services.UserPreferencesService.NormalizeGraphLayout(defaultGraphLayout);
+            await UserPreferencesService.SaveDefaultGraphLayoutAsync(defaultGraphLayout);
+            preferenceStatus = "Saved. Graph Explorer will use this layout by default.";
+        }
+        catch (Exception exception)
+        {
+            preferenceStatusIsError = true;
+            preferenceStatus = $"Could not save preference: {exception.Message}";
+        }
+        finally
+        {
+            isSavingPreference = false;
+        }
+    }
+}

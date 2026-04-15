@@ -1,6 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
 
+@using System.Globalization
 @using AiCodeAssistant.Domain.Contracts.Projects
 @inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
 
@@ -11,7 +12,10 @@
             <h1>CodeSight Overview</h1>
             <p>Saved project analysis totals from your local MySQL database.</p>
         </div>
-        <a class="primary-link" href="/graph">Open Graph Explorer</a>
+        <div class="heading-actions">
+            <a class="primary-link" href="/graph">Analyze New Project</a>
+            <a class="secondary-link" href="/history">View History</a>
+        </div>
     </header>
 
     @if (isLoading)
@@ -26,20 +30,20 @@
     {
         <div class="metric-grid">
             <article class="metric-tile">
-                <span>Total projects</span>
-                <strong>@summary.TotalProjects</strong>
+                <span>Saved projects</span>
+                <strong>@FormatNumber(summary.TotalProjects)</strong>
             </article>
             <article class="metric-tile">
-                <span>Total analyses</span>
-                <strong>@summary.TotalAnalyses</strong>
+                <span>Saved analyses</span>
+                <strong>@FormatNumber(summary.TotalAnalyses)</strong>
             </article>
             <article class="metric-tile">
-                <span>Nodes analyzed</span>
-                <strong>@summary.TotalNodesAnalyzed</strong>
+                <span>Graph nodes</span>
+                <strong>@FormatNumber(summary.TotalNodesAnalyzed)</strong>
             </article>
             <article class="metric-tile">
-                <span>Endpoints found</span>
-                <strong>@summary.TotalEndpointsDiscovered</strong>
+                <span>Endpoints</span>
+                <strong>@FormatNumber(summary.TotalEndpointsDiscovered)</strong>
             </article>
         </div>
 
@@ -63,7 +67,7 @@
                         </div>
                         <div>
                             <dt>Average node count</dt>
-                            <dd>@summary.AverageNodeCount.ToString("0.0")</dd>
+                            <dd>@summary.AverageNodeCount.ToString("0.0", CultureInfo.InvariantCulture)</dd>
                         </div>
                     </dl>
                 }
@@ -73,20 +77,24 @@
                 <h2>Recent Projects</h2>
                 @if (!recentProjects.Any())
                 {
-                    <p class="empty-state">Saved projects will appear here.</p>
+                    <div class="empty-panel">
+                        <p class="empty-state">No projects saved yet.</p>
+                        <a class="secondary-link inline" href="/graph">Scan your first project</a>
+                    </div>
                 }
                 else
                 {
                     <div class="recent-list">
                         @foreach (var project in recentProjects.Take(4))
                         {
-                            <article class="recent-item">
+                            <a class="recent-item" href="@CreateGraphExplorerLink(project)" title="@project.SourceIdentifier">
                                 <div>
                                     <strong>@project.Name</strong>
                                     <span>@project.FrameworkType</span>
                                 </div>
                                 <small>@project.AnalysisCount analyses</small>
-                            </article>
+                                <span class="recent-action">Open</span>
+                            </a>
                         }
                     </div>
                 }
@@ -123,5 +131,21 @@
         return date is null
             ? "Not saved yet"
             : date.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+
+    private static string FormatNumber(int value)
+    {
+        return value.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static string CreateGraphExplorerLink(ProjectDto project)
+    {
+        if (string.IsNullOrWhiteSpace(project.SourceIdentifier) ||
+            project.SourceIdentifier.StartsWith("mock://", StringComparison.OrdinalIgnoreCase))
+        {
+            return "/graph";
+        }
+
+        return $"/graph?source={Uri.EscapeDataString(project.SourceIdentifier)}";
     }
 }
