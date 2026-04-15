@@ -8,10 +8,22 @@
     ".NETCoreApp,Version=v10.0": {
       "AiCodeAssistant.Infrastructure/1.0.0": {
         "dependencies": {
+          "AiCodeAssistant.Application": "1.0.0",
           "AiCodeAssistant.Domain": "1.0.0"
         },
         "runtime": {
           "AiCodeAssistant.Infrastructure.dll": {}
+        }
+      },
+      "AiCodeAssistant.Application/1.0.0": {
+        "dependencies": {
+          "AiCodeAssistant.Domain": "1.0.0"
+        },
+        "runtime": {
+          "AiCodeAssistant.Application.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "AiCodeAssistant.Domain/1.0.0": {
@@ -26,6 +38,11 @@
   },
   "libraries": {
     "AiCodeAssistant.Infrastructure/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "AiCodeAssistant.Application/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

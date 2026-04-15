@@ -29,3 +29,5 @@ D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\obj\Debug\net10.0\AiCod
 D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\obj\Debug\net10.0\AiCodeAssistant.Infrastructure.sourcelink.json
 D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\obj\Debug\net10.0\AiCodeAs.494B2B1C.Up2Date
 D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\obj\Debug\net10.0\ref\AiCodeAssistant.Infrastructure.dll
+D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\bin\Debug\net10.0\AiCodeAssistant.Application.dll
+D:\Fork\ai-code-assistant\AiCodeAssistant.Infrastructure\bin\Debug\net10.0\AiCodeAssistant.Application.pdb

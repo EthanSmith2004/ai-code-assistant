@@ -13,11 +13,13 @@ D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssista
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.AssemblyInfoInputs.cache
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.AssemblyInfo.cs
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.csproj.CoreCompileInputs.cache
-D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.sourcelink.json
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.dll
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\refint\AiCodeAssistant.Domain.dll
-D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.pdb
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\Debug\net10.0\AiCodeAssistant.Domain.deps.json
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\Debug\net10.0\AiCodeAssistant.Domain.dll
-D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\Debug\net10.0\AiCodeAssistant.Domain.pdb
 D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\ref\AiCodeAssistant.Domain.dll
+D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\CodexCheck\AiCodeAssistant.Domain.deps.json
+D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\CodexCheck\AiCodeAssistant.Domain.dll
+D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\bin\Debug\net10.0\AiCodeAssistant.Domain.pdb
+D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.sourcelink.json
+D:\Fork\ai-code-assistant\AiCodeAssistant.Domain\obj\Debug\net10.0\AiCodeAssistant.Domain.pdb

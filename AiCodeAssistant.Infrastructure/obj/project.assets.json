@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     "net10.0": {
+      "AiCodeAssistant.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "AiCodeAssistant.Domain": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/AiCodeAssistant.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AiCodeAssistant.Application.dll": {}
+        }
+      },
       "AiCodeAssistant.Domain/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -15,6 +28,11 @@
     }
   },
   "libraries": {
+    "AiCodeAssistant.Application/1.0.0": {
+      "type": "project",
+      "path": "../AiCodeAssistant.Application/AiCodeAssistant.Application.csproj",
+      "msbuildProject": "../AiCodeAssistant.Application/AiCodeAssistant.Application.csproj"
+    },
     "AiCodeAssistant.Domain/1.0.0": {
       "type": "project",
       "path": "../AiCodeAssistant.Domain/AiCodeAssistant.Domain.csproj",
@@ -23,6 +41,7 @@
   },
   "projectFileDependencyGroups": {
     "net10.0": [
+      "AiCodeAssistant.Application >= 1.0.0",
       "AiCodeAssistant.Domain >= 1.0.0"
     ]
   },
@@ -58,6 +77,9 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
+            "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
+              "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
+            },
             "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
               "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
             }
