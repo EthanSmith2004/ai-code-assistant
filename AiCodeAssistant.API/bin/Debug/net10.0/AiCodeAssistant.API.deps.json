@@ -95,6 +95,7 @@
       },
       "AiCodeAssistant.Infrastructure/1.0.0": {
         "dependencies": {
+          "AiCodeAssistant.Application": "1.0.0",
           "AiCodeAssistant.Domain": "1.0.0"
         },
         "runtime": {

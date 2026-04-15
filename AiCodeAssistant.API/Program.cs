@@ -1,5 +1,9 @@
 using AiCodeAssistant.Application.Services;
 using AiCodeAssistant.Application.Interfaces;
+using AiCodeAssistant.Infrastructure.Analyzers;
+using AiCodeAssistant.Infrastructure.Detection;
+using AiCodeAssistant.Infrastructure.Scanning;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IGraphDataService, MockDataService>();
+builder.Services.AddScoped<INodeExplanationService, NodeExplanationService>();
+builder.Services.AddScoped<IProjectScanner, FileSystemProjectScanner>();
+builder.Services.AddScoped<IFrameworkDetector, DotNetFrameworkDetector>();
+builder.Services.AddScoped<ICodebaseAnalyzer, GenericCodebaseAnalyzer>();
+builder.Services.AddScoped<ICodebaseAnalysisService, CodebaseAnalysisService>();
+builder.Services.AddScoped<ICodeGraphSimplifier, CodeGraphSimplifier>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("ClientPolicy", policy =>

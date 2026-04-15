@@ -1,42 +1,1704 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 
+@using AiCodeAssistant.Domain.Analysis
+@using AiCodeAssistant.Domain.Contracts.Ai
 @using AiCodeAssistant.Domain.Entities
+@using AiCodeAssistant.Domain.Graph
+@implements IDisposable
 @inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
 @inject IJSRuntime JS
 
-<h1>Codebase Intelligence</h1>
-<p>Visualizing system structure and flows</p>
+<div class="workspace">
+    <aside class="workspace-panel explorer-panel">
+        <div class="panel-header">
+            <div>
+                <span class="panel-kicker">Workspace</span>
+                <h2>Explorer</h2>
+            </div>
+            <button class="load-button" @onclick="LoadData">@GetLoadButtonText()</button>
+        </div>
 
-<button @onclick="LoadData">Load Graph</button>
+        <div class="panel-body">
+            <section class="source-section">
+                <h3>Graph Source</h3>
+                <div class="mode-selector" role="group" aria-label="Graph source">
+                    <button class="mode-button @(graphMode == WorkspaceGraphMode.Mock ? "selected" : null)"
+                            @onclick="() => SetGraphMode(WorkspaceGraphMode.Mock)">
+                        Mock graph
+                    </button>
+                    <button class="mode-button @(graphMode == WorkspaceGraphMode.Scanned ? "selected" : null)"
+                            @onclick="() => SetGraphMode(WorkspaceGraphMode.Scanned)">
+                        Scanned project
+                    </button>
+                </div>
 
-<div id="graph" style="height:600px; border:1px solid #444; margin-top:20px; background:#0f1117;"></div>
+                @if (graphMode == WorkspaceGraphMode.Scanned)
+                {
+                    <label class="scan-path-field">
+                        <span>Root path</span>
+                        <input @bind="scanRootPath" placeholder="d:\Fork\ai-code-assistant" />
+                    </label>
+                }
 
-@if (nodes.Count > 0)
-{
-    <h3>Nodes by Layer</h3>
+                @if (!string.IsNullOrWhiteSpace(loadError))
+                {
+                    <p class="load-error">@loadError</p>
+                }
+            </section>
 
-    @foreach (var group in nodes.GroupBy(n => n.Layer))
-    {
-        <h4>@group.Key</h4>
-        <ul>
-            @foreach (var node in group)
+            @if (nodes.Count > 0)
             {
-                <li>@node.Label (@node.Type)</li>
+                <section class="flow-section">
+                    <h3>Flows</h3>
+                    @if (flows.Any())
+                    {
+                        <div class="flow-list">
+                            @foreach (var flow in flows)
+                            {
+                                <button class="flow-button @(selectedFlow?.Id == flow.Id ? "selected" : null)"
+                                        @onclick="() => SelectFlowAsync(flow)">
+                                    <span>@flow.Name</span>
+                                    <small>@flow.NodeIds.Count nodes</small>
+                                </button>
+                            }
+                        </div>
+
+                        @if (selectedFlow is not null)
+                        {
+                            <p class="flow-description">@selectedFlow.Description</p>
+                        }
+                    }
+                    else
+                    {
+                        <p class="empty-state">@GetNoFlowsMessage()</p>
+                    }
+                </section>
+
+                <section class="hotspot-section">
+                    <div class="section-title-row">
+                        <h3>Hotspots</h3>
+                        <button class="secondary-action-button" @onclick="HighlightHotspotsAsync" disabled="@(!hotspots.Any())">
+                            Highlight
+                        </button>
+                    </div>
+                    <p class="analysis-note">Degree = incoming plus outgoing relationships.</p>
+
+                    @if (hotspots.Any())
+                    {
+                        <ol class="hotspot-list">
+                            @foreach (var hotspot in hotspots.Take(5))
+                            {
+                                <li>
+                                    <div>
+                                        <span class="hotspot-name">@hotspot.Node.Label</span>
+                                        <small>@GetNodeSummary(hotspot.Node)</small>
+                                    </div>
+                                    <div class="hotspot-metrics">
+                                        <span>@hotspot.Degree</span>
+                                        <small>@hotspot.IncomingCount in / @hotspot.OutgoingCount out</small>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <p class="empty-state">No connected nodes found yet.</p>
+                    }
+                </section>
+
+                <section class="endpoint-section">
+                    <h3>Endpoints</h3>
+                    @if (endpoints.Any())
+                    {
+                        <div class="endpoint-groups">
+                            @foreach (var group in endpoints.GroupBy(endpoint => endpoint.HttpMethod))
+                            {
+                                <section class="endpoint-group">
+                                    <h4>@group.Key</h4>
+                                    <div class="endpoint-list">
+                                        @foreach (var endpoint in group)
+                                        {
+                                            <button class="endpoint-button @(selectedEndpoint?.NodeId == endpoint.NodeId ? "selected" : null)"
+                                                    @onclick="() => SelectEndpointAsync(endpoint)">
+                                                <span>@endpoint.Route</span>
+                                                <small>@endpoint.RequestType -> @endpoint.ResponseType</small>
+                                            </button>
+                                        }
+                                    </div>
+                                </section>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="empty-state">@GetNoEndpointsMessage()</p>
+                    }
+                </section>
+
+                <div class="node-groups">
+                    <h3>Nodes by Layer</h3>
+
+                    @foreach (var group in nodes.GroupBy(GetNodeGroupLabel))
+                    {
+                        <section class="node-group">
+                            <h4>@group.Key</h4>
+                            <ul>
+                                @foreach (var node in group)
+                                {
+                                    <li>@node.Label (@GetNodeKindLabel(node))</li>
+                                }
+                            </ul>
+                        </section>
+                    }
+                </div>
             }
-        </ul>
-    }
-}
+            else
+            {
+                <p class="empty-state">Load the graph to browse nodes by layer.</p>
+            }
+        </div>
+    </aside>
+
+    <main class="graph-panel">
+        <header class="workspace-heading">
+            <div>
+                <span class="panel-kicker">Graph Area</span>
+                <h1>CodeSight Workspace</h1>
+                <p>Explore structure, endpoints, flows, and hotspots</p>
+            </div>
+            <div class="graph-toolbar" aria-label="Graph controls">
+                <span class="graph-view-chip">@GetGraphViewLabel()</span>
+                <select class="layout-select" value="@selectedLayout" @onchange="ChangeLayoutAsync" aria-label="Graph layout">
+                    <option value="breadthfirst">Layered</option>
+                    <option value="cose">Organic</option>
+                    <option value="circle">Radial</option>
+                </select>
+                <button class="graph-tool-button compact" @onclick="ZoomOutAsync" disabled="@(!nodes.Any())">Zoom -</button>
+                <button class="graph-tool-button compact" @onclick="ZoomInAsync" disabled="@(!nodes.Any())">Zoom +</button>
+                <button class="graph-tool-button" @onclick="FitGraphAsync" disabled="@(!nodes.Any())">Fit</button>
+                <button class="graph-tool-button" @onclick="ResetGraphViewAsync" disabled="@(!nodes.Any())">Reset</button>
+                <button class="graph-tool-button" @onclick="ShowFullGraphAsync" disabled="@(!nodes.Any() || graphViewMode == GraphViewMode.Full)">Full graph</button>
+                <button class="graph-tool-button" @onclick="ToggleFullscreenAsync" disabled="@(!nodes.Any())">Fullscreen</button>
+            </div>
+        </header>
+
+        <section class="graph-viewport">
+            <div class="graph-stage">
+                <div class="graph-stage-body">
+                    <div id="graph" class="graph-canvas"></div>
+                    <div id="graph-vertical-pan" class="graph-pan-bar vertical" role="slider" aria-label="Vertical graph position" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+                        <span class="graph-pan-track">
+                            <span class="graph-pan-thumb"></span>
+                        </span>
+                    </div>
+                </div>
+                <div id="graph-horizontal-pan" class="graph-pan-bar horizontal" role="slider" aria-label="Horizontal graph position" aria-orientation="horizontal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+                    <span class="graph-pan-track">
+                        <span class="graph-pan-thumb"></span>
+                    </span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <aside class="workspace-panel details-panel">
+        <div class="panel-header">
+            <div>
+                <span class="panel-kicker">Selection</span>
+                <h2>Details</h2>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            @if (selectedNode is not null)
+            {
+                var scannedNode = GetSelectedCodeNode();
+                var selectedHotspot = GetHotspot(selectedNode.Id);
+
+                @if (scannedNode is not null)
+                {
+                    var scannedOutgoing = GetScannedRelationships(selectedNode.Id, outgoing: true).ToList();
+                    var scannedIncoming = GetScannedRelationships(selectedNode.Id, outgoing: false).ToList();
+                    var behavioralOutgoing = scannedOutgoing.Where(relationship => !relationship.IsStructural).ToList();
+                    var behavioralIncoming = scannedIncoming.Where(relationship => !relationship.IsStructural).ToList();
+                    var structuralRelationships = scannedOutgoing
+                        .Concat(scannedIncoming)
+                        .Where(relationship => relationship.IsStructural)
+                        .ToList();
+
+                    <dl class="detail-list">
+                        <div>
+                            <dt>Label</dt>
+                            <dd>@scannedNode.Label</dd>
+                        </div>
+                        <div>
+                            <dt>Kind</dt>
+                            <dd>@scannedNode.Kind</dd>
+                        </div>
+                        <div>
+                            <dt>Layer</dt>
+                            <dd>@scannedNode.Layer</dd>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(scannedNode.SourcePath))
+                        {
+                            <div>
+                                <dt>Source</dt>
+                                <dd>@scannedNode.SourcePath</dd>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(scannedNode.Language))
+                        {
+                            <div>
+                                <dt>Language</dt>
+                                <dd>@scannedNode.Language</dd>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(scannedNode.Framework))
+                        {
+                            <div>
+                                <dt>Framework</dt>
+                                <dd>@scannedNode.Framework</dd>
+                            </div>
+                        }
+                        <div>
+                            <dt>Description</dt>
+                            <dd>@scannedNode.Description</dd>
+                        </div>
+                        @if (selectedHotspot is not null)
+                        {
+                            <div>
+                                <dt>Hotspot Score</dt>
+                                <dd>Degree @selectedHotspot.Degree (@selectedHotspot.IncomingCount incoming / @selectedHotspot.OutgoingCount outgoing)</dd>
+                            </div>
+                            <div>
+                                <dt>Centrality</dt>
+                                <dd>@selectedHotspot.Centrality.ToString("P0")</dd>
+                            </div>
+                        }
+                    </dl>
+
+                    @if (IsContainerNode(scannedNode))
+                    {
+                        <p class="semantic-note">This is a structural container, so hotspot scoring, AI explanation, and relationship lists are omitted.</p>
+                    }
+                    else if (CanExplainSelectedNode())
+                    {
+                        <section class="ai-explanation-section">
+                            <button class="ai-explanation-button" @onclick="ExplainSelectedNodeAsync" disabled="@isExplainingNode">
+                                @(isExplainingNode ? "Explaining..." : "Explain this node")
+                            </button>
+
+                            @if (!string.IsNullOrWhiteSpace(explanationError))
+                            {
+                                <p class="ai-explanation-error">@explanationError</p>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(nodeExplanation))
+                            {
+                                <p class="ai-explanation-result">@nodeExplanation</p>
+                            }
+                        </section>
+                    }
+                    else
+                    {
+                        <p class="semantic-note">AI explanations are skipped for project and folder container nodes.</p>
+                    }
+
+                    @if (!IsContainerNode(scannedNode))
+                    {
+                        <section class="relationship-section">
+                            <h3>Behavioral Relationships</h3>
+                            @if (behavioralOutgoing.Any() || behavioralIncoming.Any())
+                            {
+                                <ul class="relationship-list">
+                                    @foreach (var relationship in behavioralOutgoing)
+                                    {
+                                        <li>
+                                            <span class="relationship-type">@relationship.Relationship</span>
+                                            <span class="relationship-peer">To @relationship.Node.Label</span>
+                                            <small>@relationship.Node.Kind - @relationship.Node.Layer</small>
+                                        </li>
+                                    }
+                                    @foreach (var relationship in behavioralIncoming)
+                                    {
+                                        <li>
+                                            <span class="relationship-type">@relationship.Relationship</span>
+                                            <span class="relationship-peer">From @relationship.Node.Label</span>
+                                            <small>@relationship.Node.Kind - @relationship.Node.Layer</small>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="empty-state">No inferred runtime relationships for this node yet.</p>
+                            }
+                        </section>
+
+                        @if (graphViewMode == GraphViewMode.Full)
+                        {
+                            <section class="relationship-section">
+                                <h3>Structural Context</h3>
+                                @if (structuralRelationships.Any())
+                                {
+                                    <ul class="relationship-list structural-list">
+                                        @foreach (var relationship in structuralRelationships)
+                                        {
+                                            <li>
+                                                <span class="relationship-type">@relationship.Relationship</span>
+                                                <span class="relationship-peer">@relationship.Direction @relationship.Node.Label</span>
+                                                <small>@relationship.Node.Kind - @relationship.Node.Layer</small>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="empty-state">No structural context is available for this node.</p>
+                                }
+                            </section>
+                        }
+                        else
+                        {
+                            <p class="semantic-note">Focus mode hides broad structural context so this panel stays centered on the active path.</p>
+                        }
+                    }
+                }
+                else
+                {
+                    var outgoingRelationships = GetOutgoingRelationships().ToList();
+                    var incomingRelationships = GetIncomingRelationships().ToList();
+
+                    <dl class="detail-list">
+                        <div>
+                            <dt>Label</dt>
+                            <dd>@selectedNode.Label</dd>
+                        </div>
+                        <div>
+                            <dt>Id</dt>
+                            <dd>@selectedNode.Id</dd>
+                        </div>
+                        <div>
+                            <dt>Layer</dt>
+                            <dd>@selectedNode.Layer</dd>
+                        </div>
+                        <div>
+                            <dt>Type</dt>
+                            <dd>@selectedNode.Type</dd>
+                        </div>
+                        <div>
+                            <dt>Description</dt>
+                            <dd>@selectedNode.Description</dd>
+                        </div>
+                        @if (selectedHotspot is not null)
+                        {
+                            <div>
+                                <dt>Hotspot Score</dt>
+                                <dd>Degree @selectedHotspot.Degree (@selectedHotspot.IncomingCount incoming / @selectedHotspot.OutgoingCount outgoing)</dd>
+                            </div>
+                            <div>
+                                <dt>Centrality</dt>
+                                <dd>@selectedHotspot.Centrality.ToString("P0")</dd>
+                            </div>
+                        }
+                    </dl>
+
+                    <section class="ai-explanation-section">
+                        <button class="ai-explanation-button" @onclick="ExplainSelectedNodeAsync" disabled="@isExplainingNode">
+                            @(isExplainingNode ? "Explaining..." : "Explain this node")
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(explanationError))
+                        {
+                            <p class="ai-explanation-error">@explanationError</p>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(nodeExplanation))
+                        {
+                            <p class="ai-explanation-result">@nodeExplanation</p>
+                        }
+                    </section>
+
+                    <section class="relationship-section">
+                        <h3>Outgoing</h3>
+                        @if (outgoingRelationships.Any())
+                        {
+                            <ul class="relationship-list">
+                                @foreach (var relationship in outgoingRelationships)
+                                {
+                                    <li>
+                                        <span class="relationship-type">@relationship.Edge.Relationship</span>
+                                        <span class="relationship-peer">To @relationship.Node.Label</span>
+                                        <small>@relationship.Node.Type - @relationship.Node.Layer</small>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="empty-state">No outgoing relationships.</p>
+                        }
+                    </section>
+
+                    <section class="relationship-section">
+                        <h3>Incoming</h3>
+                        @if (incomingRelationships.Any())
+                        {
+                            <ul class="relationship-list">
+                                @foreach (var relationship in incomingRelationships)
+                                {
+                                    <li>
+                                        <span class="relationship-type">@relationship.Edge.Relationship</span>
+                                        <span class="relationship-peer">From @relationship.Node.Label</span>
+                                        <small>@relationship.Node.Type - @relationship.Node.Layer</small>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="empty-state">No incoming relationships.</p>
+                        }
+                    </section>
+                }
+            }
+            else if (selectedFlow is not null)
+            {
+                var flowNodes = GetSelectedFlowNodes().ToList();
+                var flowRelationships = GetSelectedFlowRelationships().ToList();
+
+                <dl class="detail-list">
+                    <div>
+                        <dt>Flow</dt>
+                        <dd>@selectedFlow.Name</dd>
+                    </div>
+                    <div>
+                        <dt>Description</dt>
+                        <dd>@selectedFlow.Description</dd>
+                    </div>
+                </dl>
+
+                <section class="ai-explanation-section">
+                    <button class="ai-explanation-button" @onclick="ExplainSelectedFlowAsync" disabled="@isExplainingFlow">
+                        @(isExplainingFlow ? "Explaining..." : "Explain this flow")
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(flowExplanationError))
+                    {
+                        <p class="ai-explanation-error">@flowExplanationError</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(flowExplanation))
+                    {
+                        <p class="ai-explanation-result">@flowExplanation</p>
+                    }
+                </section>
+
+                <section class="flow-detail-section">
+                    <h3>Ordered Nodes</h3>
+                    @if (flowNodes.Any())
+                    {
+                        <ol class="flow-node-list">
+                            @foreach (var flowNode in flowNodes)
+                            {
+                                <li>
+                                    <span class="flow-node-position">@flowNode.Position</span>
+                                    <div>
+                                        @if (flowNode.Node is not null)
+                                        {
+                                            <span class="flow-node-name">@flowNode.Node.Label</span>
+                                            <small>@flowNode.Node.Type - @flowNode.Node.Layer</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="flow-node-name">@flowNode.NodeId</span>
+                                            <small>Node data unavailable</small>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <p class="empty-state">No nodes are listed for this flow.</p>
+                    }
+                </section>
+
+                <section class="relationship-section">
+                    <h3>Flow Relationships</h3>
+                    @if (flowRelationships.Any())
+                    {
+                        <ul class="relationship-list">
+                            @foreach (var relationship in flowRelationships)
+                            {
+                                <li>
+                                    <span class="relationship-type">@relationship.Edge.Relationship</span>
+                                    <span class="relationship-peer">@relationship.SourceNode.Label -> @relationship.TargetNode.Label</span>
+                                    <small>@relationship.SourceNode.Layer to @relationship.TargetNode.Layer</small>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="empty-state">No direct relationships are mapped between these nodes.</p>
+                    }
+                </section>
+            }
+            else if (selectedEndpoint is not null)
+            {
+                var endpointPathNodes = GetSelectedEndpointPathNodes().ToList();
+                var endpointRelationships = GetSelectedEndpointRelationships().ToList();
+
+                <dl class="detail-list">
+                    <div>
+                        <dt>Method</dt>
+                        <dd>@selectedEndpoint.HttpMethod</dd>
+                    </div>
+                    <div>
+                        <dt>Route</dt>
+                        <dd>@selectedEndpoint.Route</dd>
+                    </div>
+                    <div>
+                        <dt>Request Type</dt>
+                        <dd>@selectedEndpoint.RequestType</dd>
+                    </div>
+                    <div>
+                        <dt>Response Type</dt>
+                        <dd>@selectedEndpoint.ResponseType</dd>
+                    </div>
+                    <div>
+                        <dt>Graph View</dt>
+                        <dd>@GetGraphViewLabel()</dd>
+                    </div>
+                </dl>
+
+                <section class="ai-explanation-section">
+                    <button class="ai-explanation-button" @onclick="ExplainSelectedEndpointAsync" disabled="@isExplainingEndpoint">
+                        @(isExplainingEndpoint ? "Explaining..." : "Explain this endpoint")
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(endpointExplanationError))
+                    {
+                        <p class="ai-explanation-error">@endpointExplanationError</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(endpointExplanation))
+                    {
+                        <p class="ai-explanation-result">@endpointExplanation</p>
+                    }
+                </section>
+
+                <section class="flow-detail-section">
+                    <h3>Focused Path</h3>
+                    @if (endpointPathNodes.Any())
+                    {
+                        <ol class="flow-node-list">
+                            @foreach (var pathNode in endpointPathNodes)
+                            {
+                                <li>
+                                    <span class="flow-node-position">@pathNode.Position</span>
+                                    <div>
+                                        @if (pathNode.Node is not null)
+                                        {
+                                            <span class="flow-node-name">@pathNode.Node.Label</span>
+                                            <small>@GetNodeKindLabel(pathNode.Node) - @GetNodeGroupLabel(pathNode.Node)</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="flow-node-name">@pathNode.NodeId</span>
+                                            <small>Node data unavailable</small>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <p class="empty-state">No focused path is available for this endpoint yet.</p>
+                    }
+                </section>
+
+                <section class="relationship-section">
+                    <h3>Endpoint Relationships</h3>
+                    @if (endpointRelationships.Any())
+                    {
+                        <ul class="relationship-list">
+                            @foreach (var relationship in endpointRelationships)
+                            {
+                                <li>
+                                    <span class="relationship-type">@relationship.Edge.Relationship</span>
+                                    <span class="relationship-peer">@relationship.SourceNode.Label -> @relationship.TargetNode.Label</span>
+                                    <small>@GetNodeKindLabel(relationship.SourceNode) to @GetNodeKindLabel(relationship.TargetNode)</small>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="empty-state">No direct endpoint relationships are mapped yet.</p>
+                    }
+                </section>
+            }
+            else
+            {
+                <p class="empty-state">Select a node, flow, or endpoint to inspect it here.</p>
+            }
+        </div>
+    </aside>
+</div>
 
 @code {
     private List<GraphNode> nodes = new();
     private List<GraphEdge> edges = new();
+    private List<CodeFlow> flows = new();
+    private List<EndpointInfo> endpoints = new();
+    private List<NodeHotspot> hotspots = new();
+    private Dictionary<string, CodeNode> scannedNodesById = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, CodeEdge> scannedEdgesById = new(StringComparer.OrdinalIgnoreCase);
+    private WorkspaceGraphMode graphMode = WorkspaceGraphMode.Mock;
+    private GraphViewMode graphViewMode = GraphViewMode.Full;
+    private string selectedLayout = "breadthfirst";
+    private string scanRootPath = @"d:\Fork\ai-code-assistant";
+    private string loadError = string.Empty;
+    private GraphNode? selectedNode;
+    private CodeFlow? selectedFlow;
+    private EndpointInfo? selectedEndpoint;
+    private string nodeExplanation = string.Empty;
+    private string explanationError = string.Empty;
+    private bool isExplainingNode;
+    private string flowExplanation = string.Empty;
+    private string flowExplanationError = string.Empty;
+    private bool isExplainingFlow;
+    private string endpointExplanation = string.Empty;
+    private string endpointExplanationError = string.Empty;
+    private bool isExplainingEndpoint;
+    private DotNetObjectReference<Home>? dotNetReference;
 
     private async Task LoadData()
     {
+        loadError = string.Empty;
+
+        try
+        {
+            if (graphMode == WorkspaceGraphMode.Mock)
+            {
+                await LoadMockGraphAsync();
+            }
+            else
+            {
+                await LoadScannedGraphAsync();
+            }
+
+            hotspots = CalculateHotspots().ToList();
+            selectedNode = null;
+            selectedFlow = null;
+            selectedEndpoint = null;
+            graphViewMode = GraphViewMode.Full;
+            ClearNodeExplanation();
+            ClearFlowExplanation();
+            ClearEndpointExplanation();
+
+            await RenderCurrentGraphAsync();
+        }
+        catch (Exception exception)
+        {
+            loadError = exception.Message;
+        }
+    }
+
+    private async Task LoadMockGraphAsync()
+    {
         nodes = await GraphServiceManager.GetNodesAsync();
         edges = await GraphServiceManager.GetEdgesAsync();
+        flows = await GraphServiceManager.GetFlowsAsync();
+        endpoints = await GraphServiceManager.GetEndpointsAsync();
+        scannedNodesById.Clear();
+        scannedEdgesById.Clear();
+    }
 
-        await JS.InvokeVoidAsync("graphInterop.renderGraph", nodes, edges);
+    private async Task LoadScannedGraphAsync()
+    {
+        if (string.IsNullOrWhiteSpace(scanRootPath))
+        {
+            throw new InvalidOperationException("Enter a root path before loading a scanned project graph.");
+        }
+
+        var codeGraph = await GraphServiceManager.ScanSimplifiedAsync(new ProjectScanRequest
+        {
+            RootPath = scanRootPath
+        });
+
+        scannedNodesById = codeGraph.Nodes.ToDictionary(node => node.Id, StringComparer.OrdinalIgnoreCase);
+        scannedEdgesById = codeGraph.Edges.ToDictionary(edge => edge.Id, StringComparer.OrdinalIgnoreCase);
+        nodes = codeGraph.Nodes.Select(ToGraphNode).ToList();
+        edges = codeGraph.Edges.Select(ToGraphEdge).ToList();
+        flows = codeGraph.Flows;
+        endpoints = codeGraph.Endpoints;
+    }
+
+    private void SetGraphMode(WorkspaceGraphMode mode)
+    {
+        graphMode = mode;
+        graphViewMode = GraphViewMode.Full;
+        selectedNode = null;
+        selectedFlow = null;
+        selectedEndpoint = null;
+        loadError = string.Empty;
+        ClearNodeExplanation();
+        ClearFlowExplanation();
+        ClearEndpointExplanation();
+    }
+
+    private string GetLoadButtonText()
+    {
+        return graphMode == WorkspaceGraphMode.Mock
+            ? "Load Mock"
+            : "Scan Project";
+    }
+
+    private string GetNoFlowsMessage()
+    {
+        return graphMode == WorkspaceGraphMode.Scanned
+            ? "No high-confidence scanned flows inferred yet."
+            : "No flows available.";
+    }
+
+    private string GetNoEndpointsMessage()
+    {
+        return graphMode == WorkspaceGraphMode.Scanned
+            ? "No ASP.NET Core endpoints detected yet."
+            : "No endpoints available.";
+    }
+
+    private string GetNodeSummary(GraphNode node)
+    {
+        var codeNode = GetCodeNode(node.Id);
+        return codeNode is null
+            ? $"{node.Type} - {node.Layer}"
+            : $"{codeNode.Kind} - {codeNode.Layer}";
+    }
+
+    private string GetNodeGroupLabel(GraphNode node)
+    {
+        return GetCodeNode(node.Id)?.Layer ?? node.Layer.ToString();
+    }
+
+    private string GetNodeKindLabel(GraphNode node)
+    {
+        return GetCodeNode(node.Id)?.Kind ?? node.Type.ToString();
+    }
+
+    private async Task RenderCurrentGraphAsync()
+    {
+        dotNetReference ??= DotNetObjectReference.Create(this);
+        await JS.InvokeVoidAsync(
+            "graphInterop.renderGraph",
+            GetRenderableNodes(),
+            GetRenderableEdges(),
+            dotNetReference,
+            new
+            {
+                ViewMode = graphViewMode.ToString(),
+                Layout = selectedLayout
+            });
+    }
+
+    private async Task FitGraphAsync()
+    {
+        await JS.InvokeVoidAsync("graphInterop.fitGraph");
+    }
+
+    private async Task ResetGraphViewAsync()
+    {
+        await JS.InvokeVoidAsync("graphInterop.resetView");
+    }
+
+    private async Task ZoomInAsync()
+    {
+        await JS.InvokeVoidAsync("graphInterop.zoomIn");
+    }
+
+    private async Task ZoomOutAsync()
+    {
+        await JS.InvokeVoidAsync("graphInterop.zoomOut");
+    }
+
+    private async Task ToggleFullscreenAsync()
+    {
+        await JS.InvokeVoidAsync("graphInterop.toggleFullscreen");
+    }
+
+    private async Task ChangeLayoutAsync(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        selectedLayout = args.Value?.ToString() ?? "breadthfirst";
+
+        if (nodes.Any())
+        {
+            await RenderCurrentGraphAsync();
+        }
+    }
+
+    private async Task ShowFullGraphAsync()
+    {
+        graphViewMode = GraphViewMode.Full;
+        selectedNode = null;
+        selectedFlow = null;
+        selectedEndpoint = null;
+        ClearNodeExplanation();
+        ClearFlowExplanation();
+        ClearEndpointExplanation();
+
+        if (nodes.Any())
+        {
+            await RenderCurrentGraphAsync();
+        }
+    }
+
+    private string GetGraphViewLabel()
+    {
+        return graphViewMode switch
+        {
+            GraphViewMode.FlowFocus when selectedFlow is not null => $"Flow: {selectedFlow.Name}",
+            GraphViewMode.EndpointFocus when selectedEndpoint is not null => $"{selectedEndpoint.HttpMethod} {selectedEndpoint.Route}",
+            _ => "Full graph"
+        };
+    }
+
+    private IEnumerable<object> GetRenderableNodes()
+    {
+        var visibleNodes = GetVisibleGraphNodes().ToList();
+
+        if (graphMode == WorkspaceGraphMode.Mock)
+        {
+            return visibleNodes;
+        }
+
+        return visibleNodes.Select(node =>
+        {
+            var codeNode = GetCodeNode(node.Id);
+
+            return new
+            {
+                node.Id,
+                node.Label,
+                Type = codeNode?.Kind ?? node.Type.ToString(),
+                Layer = codeNode?.Layer ?? node.Layer.ToString()
+            };
+        });
+    }
+
+    private IEnumerable<object> GetRenderableEdges()
+    {
+        var visibleNodeIds = GetVisibleGraphNodes()
+            .Select(node => node.Id)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var visibleEdges = edges
+            .Where(edge => visibleNodeIds.Contains(edge.SourceId) && visibleNodeIds.Contains(edge.TargetId))
+            .ToList();
+
+        if (graphMode == WorkspaceGraphMode.Mock)
+        {
+            return visibleEdges;
+        }
+
+        return visibleEdges.Select(edge =>
+        {
+            var codeEdge = GetCodeEdge(edge.Id);
+
+            return new
+            {
+                edge.Id,
+                edge.SourceId,
+                edge.TargetId,
+                Relationship = codeEdge?.Relationship ?? edge.Relationship.ToString()
+            };
+        });
+    }
+
+    private IEnumerable<GraphNode> GetVisibleGraphNodes()
+    {
+        var visibleNodeIds = GetCurrentViewNodeIds();
+        var visibleNodes = visibleNodeIds is null
+            ? nodes
+            : nodes.Where(node => visibleNodeIds.Contains(node.Id));
+
+        return visibleNodes.Where(ShouldRenderGraphNode);
+    }
+
+    private bool ShouldRenderGraphNode(GraphNode node)
+    {
+        if (graphMode != WorkspaceGraphMode.Scanned || graphViewMode != GraphViewMode.Full)
+        {
+            return true;
+        }
+
+        var codeNode = GetCodeNode(node.Id);
+        return codeNode is null || !IsLowValueGraphNode(codeNode);
+    }
+
+    private HashSet<string>? GetCurrentViewNodeIds()
+    {
+        return graphViewMode switch
+        {
+            GraphViewMode.FlowFocus when selectedFlow is not null => selectedFlow.NodeIds.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            GraphViewMode.EndpointFocus when selectedEndpoint is not null => GetEndpointFocusNodeIds(selectedEndpoint),
+            _ => null
+        };
+    }
+
+    private HashSet<string> GetEndpointFocusNodeIds(EndpointInfo endpoint)
+    {
+        var relatedFlow = FindFlowForEndpoint(endpoint);
+
+        if (relatedFlow is not null)
+        {
+            return GetEndpointFlowNodeIds(endpoint, relatedFlow)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        var nodeIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            endpoint.NodeId
+        };
+        var queue = new Queue<(string NodeId, int Depth)>();
+        queue.Enqueue((endpoint.NodeId, 0));
+
+        while (queue.Count > 0)
+        {
+            var (nodeId, depth) = queue.Dequeue();
+
+            if (depth >= 4)
+            {
+                continue;
+            }
+
+            foreach (var edge in edges.Where(edge =>
+                         IsSameNodeId(edge.SourceId, nodeId) &&
+                         !IsStructuralRelationship(edge)))
+            {
+                if (nodeIds.Add(edge.TargetId))
+                {
+                    queue.Enqueue((edge.TargetId, depth + 1));
+                }
+            }
+        }
+
+        foreach (var edge in edges.Where(edge =>
+                     IsSameNodeId(edge.TargetId, endpoint.NodeId) &&
+                     !IsStructuralRelationship(edge)))
+        {
+            nodeIds.Add(edge.SourceId);
+        }
+
+        return nodeIds;
+    }
+
+    [JSInvokable]
+    public Task OnNodeSelected(string nodeId)
+    {
+        selectedNode = nodes.FirstOrDefault(node => node.Id == nodeId);
+
+        if (graphViewMode == GraphViewMode.Full)
+        {
+            selectedFlow = null;
+            selectedEndpoint = null;
+            ClearFlowExplanation();
+            ClearEndpointExplanation();
+        }
+
+        ClearNodeExplanation();
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task OnGraphBackgroundSelected()
+    {
+        selectedNode = null;
+        ClearNodeExplanation();
+
+        if (graphViewMode == GraphViewMode.Full)
+        {
+            selectedFlow = null;
+            selectedEndpoint = null;
+            ClearFlowExplanation();
+            ClearEndpointExplanation();
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task SelectFlowAsync(CodeFlow flow)
+    {
+        selectedFlow = flow;
+        selectedNode = null;
+        selectedEndpoint = null;
+        graphViewMode = GraphViewMode.FlowFocus;
+        ClearNodeExplanation();
+        ClearFlowExplanation();
+        ClearEndpointExplanation();
+        await RenderCurrentGraphAsync();
+    }
+
+    private async Task SelectEndpointAsync(EndpointInfo endpoint)
+    {
+        selectedEndpoint = endpoint;
+        selectedNode = null;
+        selectedFlow = null;
+        graphViewMode = GraphViewMode.EndpointFocus;
+        ClearNodeExplanation();
+        ClearFlowExplanation();
+        ClearEndpointExplanation();
+        await RenderCurrentGraphAsync();
+    }
+
+    private async Task HighlightHotspotsAsync()
+    {
+        if (!hotspots.Any())
+        {
+            return;
+        }
+
+        var hotspotNodeIds = hotspots
+            .Take(5)
+            .Select(hotspot => hotspot.Node.Id)
+            .ToList();
+
+        await JS.InvokeVoidAsync("graphInterop.highlightHotspots", hotspotNodeIds);
+    }
+
+    private async Task ExplainSelectedNodeAsync()
+    {
+        if (selectedNode is null || !CanExplainSelectedNode())
+        {
+            return;
+        }
+
+        isExplainingNode = true;
+        nodeExplanation = string.Empty;
+        explanationError = string.Empty;
+
+        try
+        {
+            var request = new ExplainNodeRequest
+            {
+                SelectedNode = ToExplanationNodeContext(selectedNode),
+                IncomingRelationships = GetNodeExplanationRelationships(outgoing: false),
+                OutgoingRelationships = GetNodeExplanationRelationships(outgoing: true)
+            };
+
+            var response = await GraphServiceManager.ExplainNodeAsync(request);
+            nodeExplanation = response.Explanation;
+        }
+        catch (Exception exception)
+        {
+            explanationError = exception.Message;
+        }
+        finally
+        {
+            isExplainingNode = false;
+        }
+    }
+
+    private async Task ExplainSelectedFlowAsync()
+    {
+        if (selectedFlow is null)
+        {
+            return;
+        }
+
+        isExplainingFlow = true;
+        flowExplanation = string.Empty;
+        flowExplanationError = string.Empty;
+
+        try
+        {
+            var request = new ExplainFlowRequest
+            {
+                FlowId = selectedFlow.Id,
+                FlowName = selectedFlow.Name,
+                Description = selectedFlow.Description,
+                OrderedNodes = GetSelectedFlowNodes()
+                    .Where(flowNode => flowNode.Node is not null)
+                    .Select(flowNode => new FlowNodeContext
+                    {
+                        Position = flowNode.Position,
+                        Node = ToExplanationNodeContext(flowNode.Node!)
+                    })
+                    .ToList(),
+                Relationships = GetSelectedFlowRelationships()
+                    .Select(ToFlowRelationshipContext)
+                    .ToList()
+            };
+
+            var response = await GraphServiceManager.ExplainFlowAsync(request);
+            flowExplanation = response.Explanation;
+        }
+        catch (Exception exception)
+        {
+            flowExplanationError = exception.Message;
+        }
+        finally
+        {
+            isExplainingFlow = false;
+        }
+    }
+
+    private async Task ExplainSelectedEndpointAsync()
+    {
+        if (selectedEndpoint is null)
+        {
+            return;
+        }
+
+        isExplainingEndpoint = true;
+        endpointExplanation = string.Empty;
+        endpointExplanationError = string.Empty;
+
+        try
+        {
+            var request = new ExplainEndpointRequest
+            {
+                Endpoint = selectedEndpoint,
+                InferredPath = GetSelectedEndpointPathNodes()
+                    .Where(pathNode => pathNode.Node is not null)
+                    .Select(pathNode => new FlowNodeContext
+                    {
+                        Position = pathNode.Position,
+                        Node = ToExplanationNodeContext(pathNode.Node!)
+                    })
+                    .ToList(),
+                Relationships = GetSelectedEndpointRelationships()
+                    .Select(ToFlowRelationshipContext)
+                    .ToList()
+            };
+
+            var response = await GraphServiceManager.ExplainEndpointAsync(request);
+            endpointExplanation = response.Explanation;
+        }
+        catch (Exception exception)
+        {
+            endpointExplanationError = exception.Message;
+        }
+        finally
+        {
+            isExplainingEndpoint = false;
+        }
+    }
+
+    private IEnumerable<NodeRelationship> GetOutgoingRelationships()
+    {
+        if (selectedNode is null)
+        {
+            return [];
+        }
+
+        return edges
+            .Where(edge => edge.SourceId == selectedNode.Id)
+            .Select(edge => CreateNodeRelationship(edge, edge.TargetId))
+            .Where(relationship => relationship is not null)
+            .Select(relationship => relationship!);
+    }
+
+    private IEnumerable<NodeRelationship> GetIncomingRelationships()
+    {
+        if (selectedNode is null)
+        {
+            return [];
+        }
+
+        return edges
+            .Where(edge => edge.TargetId == selectedNode.Id)
+            .Select(edge => CreateNodeRelationship(edge, edge.SourceId))
+            .Where(relationship => relationship is not null)
+            .Select(relationship => relationship!);
+    }
+
+    private NodeRelationship? CreateNodeRelationship(GraphEdge edge, string nodeId)
+    {
+        var node = nodes.FirstOrDefault(node => node.Id == nodeId);
+        return node is null ? null : new NodeRelationship(edge, node);
+    }
+
+    private IEnumerable<FlowNodeDetail> GetSelectedFlowNodes()
+    {
+        if (selectedFlow is null)
+        {
+            return [];
+        }
+
+        return selectedFlow.NodeIds
+            .Select((nodeId, index) => new FlowNodeDetail(
+                index + 1,
+                nodeId,
+                nodes.FirstOrDefault(node => node.Id == nodeId)));
+    }
+
+    private IEnumerable<FlowRelationship> GetSelectedFlowRelationships()
+    {
+        if (selectedFlow is null)
+        {
+            return [];
+        }
+
+        var flowNodePositions = selectedFlow.NodeIds
+            .Select((nodeId, index) => new { nodeId, index })
+            .GroupBy(flowNode => flowNode.nodeId)
+            .ToDictionary(group => group.Key, group => group.Min(flowNode => flowNode.index));
+
+        return edges
+            .Where(edge => flowNodePositions.ContainsKey(edge.SourceId) && flowNodePositions.ContainsKey(edge.TargetId))
+            .OrderBy(edge => Math.Min(flowNodePositions[edge.SourceId], flowNodePositions[edge.TargetId]))
+            .Select(CreateFlowRelationship)
+            .Where(relationship => relationship is not null)
+            .Select(relationship => relationship!);
+    }
+
+    private IEnumerable<FlowNodeDetail> GetSelectedEndpointPathNodes()
+    {
+        if (selectedEndpoint is null)
+        {
+            return [];
+        }
+
+        var relatedFlow = FindFlowForEndpoint(selectedEndpoint);
+
+        if (relatedFlow is not null)
+        {
+            return GetEndpointFlowNodeIds(selectedEndpoint, relatedFlow)
+                .Select((nodeId, index) => new FlowNodeDetail(
+                    index + 1,
+                    nodeId,
+                    nodes.FirstOrDefault(node => IsSameNodeId(node.Id, nodeId))));
+        }
+
+        var focusNodeIds = GetEndpointFocusNodeIds(selectedEndpoint);
+        var orderedNodeIds = new List<string> { selectedEndpoint.NodeId };
+        orderedNodeIds.AddRange(
+            focusNodeIds
+                .Where(nodeId => !IsSameNodeId(nodeId, selectedEndpoint.NodeId))
+                .OrderBy(GetEndpointPathRank)
+                .ThenBy(GetNodeLabel));
+
+        return orderedNodeIds
+            .Where(focusNodeIds.Contains)
+            .Select((nodeId, index) => new FlowNodeDetail(
+                index + 1,
+                nodeId,
+                nodes.FirstOrDefault(node => IsSameNodeId(node.Id, nodeId))));
+    }
+
+    private IEnumerable<FlowRelationship> GetSelectedEndpointRelationships()
+    {
+        if (selectedEndpoint is null)
+        {
+            return [];
+        }
+
+        var focusNodeIds = GetEndpointFocusNodeIds(selectedEndpoint);
+        var pathPositions = GetSelectedEndpointPathNodes()
+            .Select(pathNode => new { pathNode.NodeId, Index = pathNode.Position - 1 })
+            .GroupBy(pathNode => pathNode.NodeId, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.Min(pathNode => pathNode.Index), StringComparer.OrdinalIgnoreCase);
+
+        return edges
+            .Where(edge =>
+                focusNodeIds.Contains(edge.SourceId) &&
+                focusNodeIds.Contains(edge.TargetId) &&
+                !IsStructuralRelationship(edge))
+            .OrderBy(edge => Math.Min(
+                pathPositions.GetValueOrDefault(edge.SourceId, int.MaxValue),
+                pathPositions.GetValueOrDefault(edge.TargetId, int.MaxValue)))
+            .Select(CreateFlowRelationship)
+            .Where(relationship => relationship is not null)
+            .Select(relationship => relationship!);
+    }
+
+    private FlowRelationship? CreateFlowRelationship(GraphEdge edge)
+    {
+        var sourceNode = nodes.FirstOrDefault(node => node.Id == edge.SourceId);
+        var targetNode = nodes.FirstOrDefault(node => node.Id == edge.TargetId);
+
+        return sourceNode is null || targetNode is null
+            ? null
+            : new FlowRelationship(edge, sourceNode, targetNode);
+    }
+
+    private IEnumerable<NodeHotspot> CalculateHotspots()
+    {
+        if (!nodes.Any())
+        {
+            return [];
+        }
+
+        var hotspotCandidates = nodes
+            .Where(ShouldIncludeInHotspotScoring)
+            .ToList();
+        var hotspotEdges = edges
+            .Where(edge => !IsStructuralRelationship(edge))
+            .ToList();
+        var maxPossibleDegree = Math.Max((hotspotCandidates.Count - 1) * 2, 1);
+
+        return hotspotCandidates
+            .Select(node =>
+            {
+                var incomingCount = hotspotEdges.Count(edge => edge.TargetId == node.Id);
+                var outgoingCount = hotspotEdges.Count(edge => edge.SourceId == node.Id);
+                var degree = incomingCount + outgoingCount;
+
+                return new NodeHotspot(
+                    node,
+                    incomingCount,
+                    outgoingCount,
+                    degree,
+                    degree / (double)maxPossibleDegree);
+            })
+            .Where(hotspot => hotspot.Degree > 0)
+            .OrderByDescending(hotspot => hotspot.Degree)
+            .ThenByDescending(hotspot => hotspot.OutgoingCount)
+            .ThenBy(hotspot => hotspot.Node.Label);
+    }
+
+    private NodeHotspot? GetHotspot(string nodeId)
+    {
+        return hotspots.FirstOrDefault(hotspot => hotspot.Node.Id == nodeId);
+    }
+
+    private CodeFlow? FindFlowForEndpoint(EndpointInfo endpoint)
+    {
+        return flows.FirstOrDefault(flow =>
+            flow.NodeIds.Any(nodeId => IsSameNodeId(nodeId, endpoint.NodeId)));
+    }
+
+    private static IEnumerable<string> GetEndpointFlowNodeIds(EndpointInfo selectedEndpoint, CodeFlow relatedFlow)
+    {
+        var endpointIndex = relatedFlow.NodeIds.FindIndex(nodeId => IsSameNodeId(nodeId, selectedEndpoint.NodeId));
+
+        return endpointIndex < 0
+            ? relatedFlow.NodeIds
+            : relatedFlow.NodeIds.Skip(endpointIndex);
+    }
+
+    private int GetEndpointPathRank(string nodeId)
+    {
+        var node = nodes.FirstOrDefault(node => IsSameNodeId(node.Id, nodeId));
+        var kind = node is null ? string.Empty : GetNodeKindLabel(node);
+
+        return kind switch
+        {
+            "Controller" => 10,
+            "Service" => 20,
+            "Analyzer" => 30,
+            "Scanner" => 35,
+            "Detector" => 35,
+            "Simplifier" => 35,
+            "Repository" => 40,
+            _ => 90
+        };
+    }
+
+    private string GetNodeLabel(string nodeId)
+    {
+        return nodes.FirstOrDefault(node => IsSameNodeId(node.Id, nodeId))?.Label ?? nodeId;
+    }
+
+    private static bool IsSameNodeId(string left, string right)
+    {
+        return string.Equals(left, right, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private CodeNode? GetSelectedCodeNode()
+    {
+        return selectedNode is null ? null : GetCodeNode(selectedNode.Id);
+    }
+
+    private CodeNode? GetCodeNode(string nodeId)
+    {
+        return scannedNodesById.TryGetValue(nodeId, out var codeNode)
+            ? codeNode
+            : null;
+    }
+
+    private CodeEdge? GetCodeEdge(string edgeId)
+    {
+        return scannedEdgesById.TryGetValue(edgeId, out var codeEdge)
+            ? codeEdge
+            : null;
+    }
+
+    private IEnumerable<ScannedRelationship> GetScannedRelationships(string nodeId, bool outgoing)
+    {
+        if (graphMode != WorkspaceGraphMode.Scanned)
+        {
+            return [];
+        }
+
+        return scannedEdgesById.Values
+            .Where(edge => outgoing ? edge.SourceId == nodeId : edge.TargetId == nodeId)
+            .Select(edge =>
+            {
+                var peerNodeId = outgoing ? edge.TargetId : edge.SourceId;
+                var peerNode = GetCodeNode(peerNodeId);
+
+                return peerNode is null
+                    ? null
+                    : new ScannedRelationship(
+                        edge.Relationship,
+                        peerNode,
+                        outgoing ? "To" : "From",
+                        IsStructuralRelationship(edge.Relationship));
+            })
+            .Where(relationship => relationship is not null)
+            .Select(relationship => relationship!);
+    }
+
+    private List<NodeRelationshipContext> GetNodeExplanationRelationships(bool outgoing)
+    {
+        if (graphMode == WorkspaceGraphMode.Scanned && selectedNode is not null)
+        {
+            return GetScannedRelationships(selectedNode.Id, outgoing)
+                .Where(relationship => !relationship.IsStructural)
+                .Select(relationship => new NodeRelationshipContext
+                {
+                    Relationship = relationship.Relationship,
+                    Node = ToCodeNodeContext(relationship.Node)
+                })
+                .ToList();
+        }
+
+        var relationships = outgoing ? GetOutgoingRelationships() : GetIncomingRelationships();
+        return relationships
+            .Select(relationship => ToRelationshipContext(relationship))
+            .ToList();
+    }
+
+    private bool ShouldIncludeInHotspotScoring(GraphNode node)
+    {
+        if (graphMode != WorkspaceGraphMode.Scanned)
+        {
+            return true;
+        }
+
+        var codeNode = GetCodeNode(node.Id);
+        return codeNode is not null && !IsContainerNode(codeNode);
+    }
+
+    private bool CanExplainSelectedNode()
+    {
+        if (selectedNode is null || graphMode != WorkspaceGraphMode.Scanned)
+        {
+            return selectedNode is not null;
+        }
+
+        var codeNode = GetCodeNode(selectedNode.Id);
+        return codeNode is not null && !IsContainerNode(codeNode);
+    }
+
+    private bool IsStructuralRelationship(GraphEdge edge)
+    {
+        return graphMode == WorkspaceGraphMode.Scanned &&
+               GetCodeEdge(edge.Id) is { } codeEdge &&
+               IsStructuralRelationship(codeEdge.Relationship);
+    }
+
+    private static bool IsStructuralRelationship(string relationship)
+    {
+        return relationship is "Contains" or "ContainsConfig" or "ContainsProjectFile" or "HasEntryPoint";
+    }
+
+    private static bool IsContainerNode(CodeNode node)
+    {
+        return node.Kind is "Project" or "Folder";
+    }
+
+    private static bool IsLowValueGraphNode(CodeNode node)
+    {
+        return node.Kind is "Project" or "Folder" or "ProjectFile" or "Config" or "File";
+    }
+
+    private static GraphNode ToGraphNode(CodeNode node)
+    {
+        return new GraphNode
+        {
+            Id = node.Id,
+            Label = node.Label,
+            Type = ToNodeType(node.Kind),
+            Layer = ToLayerType(node.Layer),
+            Description = CreateScannedNodeDescription(node)
+        };
+    }
+
+    private static GraphEdge ToGraphEdge(CodeEdge edge)
+    {
+        return new GraphEdge
+        {
+            Id = edge.Id,
+            SourceId = edge.SourceId,
+            TargetId = edge.TargetId,
+            Relationship = ToRelationshipType(edge.Relationship)
+        };
+    }
+
+    private static NodeType ToNodeType(string kind)
+    {
+        return kind switch
+        {
+            "Route" => NodeType.Page,
+            "Endpoint" => NodeType.Endpoint,
+            "Component" => NodeType.Component,
+            "Controller" => NodeType.Controller,
+            "Service" => NodeType.Service,
+            "Repository" => NodeType.Repository,
+            "Entity" => NodeType.Database,
+            "Manager" => NodeType.Component,
+            "RestClient" => NodeType.Component,
+            "Scanner" => NodeType.Service,
+            "Detector" => NodeType.Service,
+            "Analyzer" => NodeType.Service,
+            "Simplifier" => NodeType.Service,
+            _ => NodeType.Component
+        };
+    }
+
+    private static LayerType ToLayerType(string layer)
+    {
+        return layer switch
+        {
+            "Frontend" => LayerType.Frontend,
+            "Api" => LayerType.Api,
+            "Application" => LayerType.Application,
+            "Data" => LayerType.Data,
+            _ => LayerType.Application
+        };
+    }
+
+    private static RelationshipType ToRelationshipType(string relationship)
+    {
+        if (Enum.TryParse<RelationshipType>(relationship, ignoreCase: true, out var parsedRelationship))
+        {
+            return parsedRelationship;
+        }
+
+        return relationship switch
+        {
+            "HasEntryPoint" => RelationshipType.MapsTo,
+            _ => RelationshipType.Uses
+        };
+    }
+
+    private static string CreateScannedNodeDescription(CodeNode node)
+    {
+        var sourcePath = string.IsNullOrWhiteSpace(node.SourcePath)
+            ? "No source path available."
+            : $"Source: {node.SourcePath}";
+
+        return $"{node.Kind} in the {node.Layer} layer. {node.Description} {sourcePath}";
+    }
+
+    private NodeContext ToExplanationNodeContext(GraphNode node)
+    {
+        var codeNode = GetCodeNode(node.Id);
+        return codeNode is null ? ToNodeContext(node) : ToCodeNodeContext(codeNode);
+    }
+
+    private static NodeContext ToCodeNodeContext(CodeNode node)
+    {
+        return new NodeContext
+        {
+            Id = node.Id,
+            Label = node.Label,
+            Type = node.Kind,
+            Layer = node.Layer,
+            Description = CreateScannedNodeDescription(node)
+        };
+    }
+
+    private static NodeContext ToNodeContext(GraphNode node)
+    {
+        return new NodeContext
+        {
+            Id = node.Id,
+            Label = node.Label,
+            Type = node.Type.ToString(),
+            Layer = node.Layer.ToString(),
+            Description = node.Description
+        };
+    }
+
+    private static NodeRelationshipContext ToRelationshipContext(NodeRelationship relationship)
+    {
+        return new NodeRelationshipContext
+        {
+            Relationship = relationship.Edge.Relationship.ToString(),
+            Node = ToNodeContext(relationship.Node)
+        };
+    }
+
+    private FlowRelationshipContext ToFlowRelationshipContext(FlowRelationship relationship)
+    {
+        return new FlowRelationshipContext
+        {
+            Relationship = relationship.Edge.Relationship.ToString(),
+            SourceNode = ToExplanationNodeContext(relationship.SourceNode),
+            TargetNode = ToExplanationNodeContext(relationship.TargetNode)
+        };
+    }
+
+    private void ClearNodeExplanation()
+    {
+        nodeExplanation = string.Empty;
+        explanationError = string.Empty;
+        isExplainingNode = false;
+    }
+
+    private void ClearFlowExplanation()
+    {
+        flowExplanation = string.Empty;
+        flowExplanationError = string.Empty;
+        isExplainingFlow = false;
+    }
+
+    private void ClearEndpointExplanation()
+    {
+        endpointExplanation = string.Empty;
+        endpointExplanationError = string.Empty;
+        isExplainingEndpoint = false;
+    }
+
+    public void Dispose()
+    {
+        dotNetReference?.Dispose();
+    }
+
+    private sealed record NodeRelationship(GraphEdge Edge, GraphNode Node);
+
+    private sealed record FlowNodeDetail(int Position, string NodeId, GraphNode? Node);
+
+    private sealed record FlowRelationship(GraphEdge Edge, GraphNode SourceNode, GraphNode TargetNode);
+
+    private sealed record ScannedRelationship(string Relationship, CodeNode Node, string Direction, bool IsStructural);
+
+    private sealed record NodeHotspot(
+        GraphNode Node,
+        int IncomingCount,
+        int OutgoingCount,
+        int Degree,
+        double Centrality);
+
+    private enum WorkspaceGraphMode
+    {
+        Mock,
+        Scanned
+    }
+
+    private enum GraphViewMode
+    {
+        Full,
+        FlowFocus,
+        EndpointFocus
     }
 }

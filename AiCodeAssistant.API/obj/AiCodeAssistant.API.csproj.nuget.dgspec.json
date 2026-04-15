@@ -1216,6 +1216,9 @@
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
+              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
+                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
+              },
               "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
                 "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
               }

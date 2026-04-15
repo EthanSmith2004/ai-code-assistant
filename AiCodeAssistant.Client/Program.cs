@@ -2,6 +2,7 @@ using AiCodeAssistant.Client.Components;
 using AiCodeAssistant.Client.Services.Managers;
 using AiCodeAssistant.Client.Services.Rest;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
