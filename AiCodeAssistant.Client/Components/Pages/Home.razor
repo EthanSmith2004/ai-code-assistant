@@ -1,8 +1,9 @@
-﻿@page "/"
+﻿@page "/graph"
 @rendermode InteractiveServer
 
 @using AiCodeAssistant.Domain.Analysis
 @using AiCodeAssistant.Domain.Contracts.Ai
+@using AiCodeAssistant.Domain.Contracts.Projects
 @using AiCodeAssistant.Domain.Entities
 @using AiCodeAssistant.Domain.Graph
 @implements IDisposable
@@ -165,7 +166,7 @@
         <header class="workspace-heading">
             <div>
                 <span class="panel-kicker">Graph Area</span>
-                <h1>CodeSight Workspace</h1>
+                <h1>Graph Explorer</h1>
                 <p>Explore structure, endpoints, flows, and hotspots</p>
             </div>
             <div class="graph-toolbar" aria-label="Graph controls">
@@ -173,21 +174,74 @@
                 <select class="layout-select" value="@selectedLayout" @onchange="ChangeLayoutAsync" aria-label="Graph layout">
                     <option value="breadthfirst">Layered</option>
                     <option value="cose">Organic</option>
-                    <option value="circle">Radial</option>
                 </select>
-                <button class="graph-tool-button compact" @onclick="ZoomOutAsync" disabled="@(!nodes.Any())">Zoom -</button>
-                <button class="graph-tool-button compact" @onclick="ZoomInAsync" disabled="@(!nodes.Any())">Zoom +</button>
-                <button class="graph-tool-button" @onclick="FitGraphAsync" disabled="@(!nodes.Any())">Fit</button>
-                <button class="graph-tool-button" @onclick="ResetGraphViewAsync" disabled="@(!nodes.Any())">Reset</button>
-                <button class="graph-tool-button" @onclick="ShowFullGraphAsync" disabled="@(!nodes.Any() || graphViewMode == GraphViewMode.Full)">Full graph</button>
-                <button class="graph-tool-button" @onclick="ToggleFullscreenAsync" disabled="@(!nodes.Any())">Fullscreen</button>
+                <button class="save-analysis-button" @onclick="SaveCurrentAnalysisAsync" disabled="@(!CanSaveAnalysis)">
+                    @(isSavingAnalysis ? "Saving..." : "Save analysis")
+                </button>
             </div>
         </header>
+
+        @if (!string.IsNullOrWhiteSpace(saveStatusMessage) || !string.IsNullOrWhiteSpace(saveError))
+        {
+            <div class="save-status-bar @(string.IsNullOrWhiteSpace(saveError) ? "success" : "error")">
+                @(string.IsNullOrWhiteSpace(saveError) ? saveStatusMessage : saveError)
+            </div>
+        }
 
         <section class="graph-viewport">
             <div class="graph-stage">
                 <div class="graph-stage-body">
                     <div id="graph" class="graph-canvas"></div>
+                    <div class="graph-floating-controls" role="toolbar" aria-label="Graph navigation controls">
+                        <button class="graph-icon-button" @onclick="ZoomOutAsync" disabled="@(!nodes.Any())" aria-label="Zoom out" title="Zoom out">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="10.5" cy="10.5" r="5.5"></circle>
+                                <path d="M15 15l4.5 4.5"></path>
+                                <path d="M8 10.5h5"></path>
+                            </svg>
+                        </button>
+                        <button class="graph-icon-button" @onclick="ZoomInAsync" disabled="@(!nodes.Any())" aria-label="Zoom in" title="Zoom in">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="10.5" cy="10.5" r="5.5"></circle>
+                                <path d="M15 15l4.5 4.5"></path>
+                                <path d="M10.5 8v5"></path>
+                                <path d="M8 10.5h5"></path>
+                            </svg>
+                        </button>
+                        <button class="graph-icon-button" @onclick="FitGraphAsync" disabled="@(!nodes.Any())" aria-label="Fit graph" title="Fit graph">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M5 9V5h4"></path>
+                                <path d="M15 5h4v4"></path>
+                                <path d="M19 15v4h-4"></path>
+                                <path d="M9 19H5v-4"></path>
+                                <path d="M8 12h8"></path>
+                            </svg>
+                        </button>
+                        <button class="graph-icon-button" @onclick="ResetGraphViewAsync" disabled="@(!nodes.Any())" aria-label="Reset layout" title="Reset layout">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M6 9a7 7 0 1 1 1.6 8.8"></path>
+                                <path d="M6 5v4h4"></path>
+                            </svg>
+                        </button>
+                        <button class="graph-icon-button" @onclick="ShowFullGraphAsync" disabled="@(!nodes.Any() || graphViewMode == GraphViewMode.Full)" aria-label="Show full graph" title="Show full graph">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="6" cy="7" r="2"></circle>
+                                <circle cx="18" cy="7" r="2"></circle>
+                                <circle cx="12" cy="17" r="2"></circle>
+                                <path d="M8 8l3 7"></path>
+                                <path d="M16 8l-3 7"></path>
+                                <path d="M8 7h8"></path>
+                            </svg>
+                        </button>
+                        <button class="graph-icon-button" @onclick="ToggleFullscreenAsync" disabled="@(!nodes.Any())" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M8 4H4v4"></path>
+                                <path d="M16 4h4v4"></path>
+                                <path d="M20 16v4h-4"></path>
+                                <path d="M4 16v4h4"></path>
+                            </svg>
+                        </button>
+                    </div>
                     <div id="graph-vertical-pan" class="graph-pan-bar vertical" role="slider" aria-label="Vertical graph position" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
                         <span class="graph-pan-track">
                             <span class="graph-pan-thumb"></span>
@@ -677,7 +731,12 @@
     private string endpointExplanation = string.Empty;
     private string endpointExplanationError = string.Empty;
     private bool isExplainingEndpoint;
+    private bool isSavingAnalysis;
+    private string saveStatusMessage = string.Empty;
+    private string saveError = string.Empty;
     private DotNetObjectReference<Home>? dotNetReference;
+
+    private bool CanSaveAnalysis => nodes.Any() && !isSavingAnalysis;
 
     private async Task LoadData()
     {
@@ -699,6 +758,7 @@
             selectedFlow = null;
             selectedEndpoint = null;
             graphViewMode = GraphViewMode.Full;
+            ClearSaveStatus();
             ClearNodeExplanation();
             ClearFlowExplanation();
             ClearEndpointExplanation();
@@ -749,6 +809,7 @@
         selectedFlow = null;
         selectedEndpoint = null;
         loadError = string.Empty;
+        ClearSaveStatus();
         ClearNodeExplanation();
         ClearFlowExplanation();
         ClearEndpointExplanation();
@@ -804,7 +865,7 @@
             new
             {
                 ViewMode = graphViewMode.ToString(),
-                Layout = selectedLayout
+                Layout = NormalizeLayout(selectedLayout)
             });
     }
 
@@ -835,12 +896,120 @@
 
     private async Task ChangeLayoutAsync(Microsoft.AspNetCore.Components.ChangeEventArgs args)
     {
-        selectedLayout = args.Value?.ToString() ?? "breadthfirst";
+        selectedLayout = NormalizeLayout(args.Value?.ToString());
 
         if (nodes.Any())
         {
             await RenderCurrentGraphAsync();
         }
+    }
+
+    private static string NormalizeLayout(string? layout)
+    {
+        return string.Equals(layout, "cose", StringComparison.OrdinalIgnoreCase)
+            ? "cose"
+            : "breadthfirst";
+    }
+
+    private async Task SaveCurrentAnalysisAsync()
+    {
+        if (!nodes.Any())
+        {
+            return;
+        }
+
+        isSavingAnalysis = true;
+        saveStatusMessage = string.Empty;
+        saveError = string.Empty;
+
+        try
+        {
+            var project = await GraphServiceManager.SaveProjectAsync(new SaveProjectRequest
+            {
+                Name = GetCurrentProjectName(),
+                FrameworkType = GetCurrentFrameworkType(),
+                SourceIdentifier = GetCurrentSourceIdentifier()
+            });
+            var analysis = await GraphServiceManager.SaveAnalysisAsync(project.Id, new SaveAnalysisRequest
+            {
+                Summary = CreateAnalysisSummary(),
+                FileCount = GetAnalysisFileCount(),
+                NodeCount = nodes.Count,
+                EdgeCount = edges.Count,
+                EndpointCount = endpoints.Count
+            });
+
+            saveStatusMessage = $"Saved analysis for {project.Name}: {analysis.NodeCount} nodes, {analysis.EdgeCount} edges, {analysis.EndpointCount} endpoints.";
+        }
+        catch (Exception exception)
+        {
+            saveError = exception.Message;
+        }
+        finally
+        {
+            isSavingAnalysis = false;
+        }
+    }
+
+    private string GetCurrentProjectName()
+    {
+        if (graphMode == WorkspaceGraphMode.Mock)
+        {
+            return "Mock CodeSight graph";
+        }
+
+        var trimmedPath = scanRootPath.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar,
+            '/',
+            '\\');
+        var folderName = Path.GetFileName(trimmedPath);
+
+        return string.IsNullOrWhiteSpace(folderName)
+            ? "Scanned project"
+            : folderName;
+    }
+
+    private string GetCurrentFrameworkType()
+    {
+        if (graphMode == WorkspaceGraphMode.Mock)
+        {
+            return "Mock";
+        }
+
+        return scannedNodesById.Values
+            .Select(node => node.Framework)
+            .FirstOrDefault(framework => !string.IsNullOrWhiteSpace(framework))
+            ?? "Unknown";
+    }
+
+    private string GetCurrentSourceIdentifier()
+    {
+        return graphMode == WorkspaceGraphMode.Mock
+            ? "mock://codesight/phase-one"
+            : scanRootPath;
+    }
+
+    private int GetAnalysisFileCount()
+    {
+        if (graphMode != WorkspaceGraphMode.Scanned)
+        {
+            return nodes.Count;
+        }
+
+        return scannedNodesById.Values
+            .Where(node => !IsContainerNode(node))
+            .Select(node => node.SourcePath)
+            .Where(sourcePath => !string.IsNullOrWhiteSpace(sourcePath))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Count();
+    }
+
+    private string CreateAnalysisSummary()
+    {
+        return graphMode == WorkspaceGraphMode.Mock
+            ? "Saved from the mock graph workspace."
+            : $"Scanned {GetCurrentProjectName()} with {nodes.Count} visible graph nodes and {endpoints.Count} detected endpoints.";
     }
 
     private async Task ShowFullGraphAsync()
@@ -1667,6 +1836,13 @@
         endpointExplanation = string.Empty;
         endpointExplanationError = string.Empty;
         isExplainingEndpoint = false;
+    }
+
+    private void ClearSaveStatus()
+    {
+        saveStatusMessage = string.Empty;
+        saveError = string.Empty;
+        isSavingAnalysis = false;
     }
 
     public void Dispose()

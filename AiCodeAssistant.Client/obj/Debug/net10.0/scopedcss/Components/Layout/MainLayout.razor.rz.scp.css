@@ -91,7 +91,10 @@
 .shell-nav[b-nblb0u9laz] {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 0.4rem;
+    min-width: 0;
 }
 
 .shell-nav-link[b-nblb0u9laz] {
@@ -168,11 +171,12 @@
     }
 
     .shell-nav[b-nblb0u9laz] {
+        flex-wrap: wrap;
         width: 100%;
     }
 
     .shell-nav-link[b-nblb0u9laz] {
         justify-content: center;
-        width: 100%;
+        flex: 1 1 9rem;
     }
 }

@@ -1,0 +1,127 @@
+@page "/"
+@rendermode InteractiveServer
+
+@using AiCodeAssistant.Domain.Contracts.Projects
+@inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
+
+<section class="dashboard-page">
+    <header class="page-heading">
+        <div>
+            <span class="page-kicker">Dashboard</span>
+            <h1>CodeSight Overview</h1>
+            <p>Saved project analysis totals from your local MySQL database.</p>
+        </div>
+        <a class="primary-link" href="/graph">Open Graph Explorer</a>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="page-state">Loading saved analysis data...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <p class="page-state error">@loadError</p>
+    }
+    else
+    {
+        <div class="metric-grid">
+            <article class="metric-tile">
+                <span>Total projects</span>
+                <strong>@summary.TotalProjects</strong>
+            </article>
+            <article class="metric-tile">
+                <span>Total analyses</span>
+                <strong>@summary.TotalAnalyses</strong>
+            </article>
+            <article class="metric-tile">
+                <span>Nodes analyzed</span>
+                <strong>@summary.TotalNodesAnalyzed</strong>
+            </article>
+            <article class="metric-tile">
+                <span>Endpoints found</span>
+                <strong>@summary.TotalEndpointsDiscovered</strong>
+            </article>
+        </div>
+
+        <div class="dashboard-grid">
+            <section class="overview-panel">
+                <h2>Latest Save</h2>
+                @if (string.IsNullOrWhiteSpace(summary.LatestProjectName))
+                {
+                    <p class="empty-state">No saved analyses yet. Scan a project in Graph Explorer, then save the analysis.</p>
+                }
+                else
+                {
+                    <dl class="summary-list">
+                        <div>
+                            <dt>Project</dt>
+                            <dd>@summary.LatestProjectName</dd>
+                        </div>
+                        <div>
+                            <dt>Saved</dt>
+                            <dd>@FormatDate(summary.LatestAnalysisAt)</dd>
+                        </div>
+                        <div>
+                            <dt>Average node count</dt>
+                            <dd>@summary.AverageNodeCount.ToString("0.0")</dd>
+                        </div>
+                    </dl>
+                }
+            </section>
+
+            <section class="overview-panel">
+                <h2>Recent Projects</h2>
+                @if (!recentProjects.Any())
+                {
+                    <p class="empty-state">Saved projects will appear here.</p>
+                }
+                else
+                {
+                    <div class="recent-list">
+                        @foreach (var project in recentProjects.Take(4))
+                        {
+                            <article class="recent-item">
+                                <div>
+                                    <strong>@project.Name</strong>
+                                    <span>@project.FrameworkType</span>
+                                </div>
+                                <small>@project.AnalysisCount analyses</small>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    }
+</section>
+
+@code {
+    private DashboardSummaryDto summary = new();
+    private List<ProjectDto> recentProjects = new();
+    private bool isLoading = true;
+    private string loadError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await GraphServiceManager.GetDashboardSummaryAsync();
+            recentProjects = await GraphServiceManager.GetProjectsAsync();
+        }
+        catch (Exception exception)
+        {
+            loadError = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatDate(DateTime? date)
+    {
+        return date is null
+            ? "Not saved yet"
+            : date.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+}

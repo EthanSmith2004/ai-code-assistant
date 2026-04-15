@@ -101,7 +101,7 @@
 }
 
 .layout-select,
-.graph-tool-button {
+.save-analysis-button {
     min-height: 2.15rem;
     border: 1px solid rgba(174, 184, 204, 0.14);
     border-radius: 8px;
@@ -116,17 +116,18 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-.graph-tool-button.compact {
-    padding-inline: 0.5rem;
-}
-
 .layout-select {
     color: #dbeafe;
 }
 
-.graph-tool-button:hover:not(:disabled),
-.graph-tool-button:focus-visible,
-.layout-select:focus-visible {
+.save-analysis-button {
+    border-color: rgba(52, 211, 153, 0.28);
+    color: #d1fae5;
+}
+
+.layout-select:focus-visible,
+.save-analysis-button:hover:not(:disabled),
+.save-analysis-button:focus-visible {
     border-color: rgba(103, 232, 249, 0.48);
     outline: none;
     background:
@@ -134,10 +135,28 @@
         rgba(28, 32, 48, 0.95);
 }
 
-.graph-tool-button:disabled {
+.save-analysis-button:disabled {
     color: var(--muted-soft);
     cursor: not-allowed;
     opacity: 0.64;
+}
+
+.save-status-bar {
+    flex: 0 0 auto;
+    border-bottom: 1px solid rgba(174, 184, 204, 0.12);
+    font-size: 0.83rem;
+    font-weight: 750;
+    padding: 0.58rem 0.95rem;
+}
+
+.save-status-bar.success {
+    background: rgba(52, 211, 153, 0.1);
+    color: #bbf7d0;
+}
+
+.save-status-bar.error {
+    background: rgba(248, 113, 113, 0.1);
+    color: #fecaca;
 }
 
 .workspace-heading h1,
@@ -247,16 +266,15 @@
 }
 
 .graph-viewport {
+    position: relative;
     display: flex;
     flex: 1;
     min-height: 0;
     overflow: hidden;
     padding: 0.55rem;
     background:
-        linear-gradient(135deg, rgba(103, 232, 249, 0.06), transparent 38%),
-        linear-gradient(225deg, rgba(167, 139, 250, 0.07), transparent 42%),
-        linear-gradient(180deg, rgba(103, 232, 249, 0.035), rgba(167, 139, 250, 0.025)),
-        #0d1018;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0)),
+        #05070b;
 }
 
 .graph-stage {
@@ -268,6 +286,7 @@
 }
 
 .graph-stage-body {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     min-width: 0;
@@ -277,21 +296,78 @@
 .graph-canvas {
     height: 100%;
     min-height: 0;
-    border: 1px solid rgba(103, 232, 249, 0.32);
+    border: 1px solid rgba(148, 163, 184, 0.22);
     border-radius: 8px;
     background:
-        radial-gradient(circle at 18% 18%, rgba(103, 232, 249, 0.11), transparent 28%),
-        radial-gradient(circle at 78% 14%, rgba(217, 70, 239, 0.1), transparent 30%),
-        linear-gradient(rgba(103, 232, 249, 0.042) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(103, 232, 249, 0.042) 1px, transparent 1px),
-        linear-gradient(135deg, rgba(167, 139, 250, 0.055), transparent 48%),
-        #050812;
-    background-size: auto, auto, 32px 32px, 32px 32px, auto;
+        linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+        #030508;
+    background-size: 34px 34px, 34px 34px, auto;
     box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.02),
-        inset 0 0 84px rgba(103, 232, 249, 0.07),
-        inset 0 0 120px rgba(167, 139, 250, 0.04),
+        inset 0 0 86px rgba(0, 0, 0, 0.34),
         0 18px 56px rgba(0, 0, 0, 0.34);
+}
+
+.graph-floating-controls {
+    position: absolute;
+    right: 2.05rem;
+    bottom: 0.85rem;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: calc(100% - 3rem);
+    padding: 0.34rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    background: rgba(5, 7, 11, 0.86);
+    box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.graph-icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 1px solid rgba(191, 219, 254, 0.24);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0)),
+        rgba(15, 23, 42, 0.92);
+    color: #e5edf8;
+    padding: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.graph-icon-button svg {
+    width: 1.12rem;
+    height: 1.12rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.9;
+}
+
+.graph-icon-button:hover:not(:disabled),
+.graph-icon-button:focus-visible {
+    border-color: rgba(191, 219, 254, 0.62);
+    color: #ffffff;
+    outline: none;
+    background:
+        linear-gradient(180deg, rgba(96, 165, 250, 0.18), rgba(52, 211, 153, 0.1)),
+        rgba(15, 23, 42, 0.96);
+}
+
+.graph-icon-button:disabled {
+    color: var(--muted-soft);
+    cursor: not-allowed;
+    opacity: 0.48;
 }
 
 .graph-pan-bar {
@@ -323,9 +399,9 @@
     position: relative;
     display: block;
     border-radius: 8px;
-    border: 1px solid rgba(103, 232, 249, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.18);
     background:
-        linear-gradient(90deg, rgba(103, 232, 249, 0.16), rgba(167, 139, 250, 0.14)),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.14), rgba(52, 211, 153, 0.08)),
         rgba(255, 255, 255, 0.04);
 }
 
@@ -339,20 +415,20 @@
     height: 100%;
     min-height: 4rem;
     background:
-        linear-gradient(180deg, rgba(103, 232, 249, 0.16), rgba(167, 139, 250, 0.14)),
+        linear-gradient(180deg, rgba(148, 163, 184, 0.14), rgba(52, 211, 153, 0.08)),
         rgba(255, 255, 255, 0.04);
 }
 
 .graph-pan-thumb {
     position: absolute;
-    border: 1px solid rgba(103, 232, 249, 0.46);
+    border: 1px solid rgba(191, 219, 254, 0.46);
     border-radius: 8px;
     background:
-        linear-gradient(90deg, rgba(103, 232, 249, 0.72), rgba(217, 70, 239, 0.58)),
+        linear-gradient(90deg, rgba(147, 197, 253, 0.72), rgba(52, 211, 153, 0.58)),
         #1c2030;
     box-shadow:
-        0 0 18px rgba(103, 232, 249, 0.18),
-        0 0 28px rgba(217, 70, 239, 0.08);
+        0 0 18px rgba(147, 197, 253, 0.16),
+        0 0 28px rgba(52, 211, 153, 0.08);
 }
 
 .graph-pan-bar.horizontal .graph-pan-thumb {
@@ -369,7 +445,7 @@
     width: 0.72rem;
     height: clamp(3rem, 18%, 8rem);
     background:
-        linear-gradient(180deg, rgba(103, 232, 249, 0.72), rgba(217, 70, 239, 0.58)),
+        linear-gradient(180deg, rgba(147, 197, 253, 0.72), rgba(52, 211, 153, 0.58)),
         #1c2030;
     transform: translate(-50%, -50%);
 }
@@ -382,9 +458,8 @@
     display: flex;
     padding: 1rem;
     background:
-        linear-gradient(135deg, rgba(103, 232, 249, 0.08), transparent 38%),
-        linear-gradient(225deg, rgba(167, 139, 250, 0.1), transparent 42%),
-        #070910;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+        #030508;
 }
 
 .graph-viewport:fullscreen .graph-canvas {

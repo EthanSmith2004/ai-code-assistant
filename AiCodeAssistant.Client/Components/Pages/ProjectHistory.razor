@@ -1,0 +1,149 @@
+@page "/history"
+@rendermode InteractiveServer
+
+@using AiCodeAssistant.Domain.Contracts.Projects
+@inject AiCodeAssistant.Client.Services.Managers.GraphServiceManager GraphServiceManager
+
+<section class="history-page">
+    <header class="page-heading">
+        <div>
+            <span class="page-kicker">Project History</span>
+            <h1>Saved Analyses</h1>
+            <p>Review projects and analysis snapshots saved from Graph Explorer.</p>
+        </div>
+        <a class="primary-link" href="/graph">Analyze another project</a>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="page-state">Loading project history...</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(loadError))
+    {
+        <p class="page-state error">@loadError</p>
+    }
+    else if (!projects.Any())
+    {
+        <p class="page-state">No saved projects yet.</p>
+    }
+    else
+    {
+        <div class="history-layout">
+            <section class="project-list" aria-label="Saved projects">
+                @foreach (var project in projects)
+                {
+                    <button class="project-row @(selectedProjectId == project.Id ? "selected" : null)"
+                            @onclick="() => SelectProjectAsync(project)">
+                        <span>@project.Name</span>
+                        <small>@project.FrameworkType - @project.AnalysisCount analyses</small>
+                    </button>
+                }
+            </section>
+
+            <section class="analysis-panel">
+                <h2>@selectedProject?.Name</h2>
+                @if (selectedProject is not null)
+                {
+                    <p class="source-text">@selectedProject.SourceIdentifier</p>
+                }
+
+                @if (isLoadingAnalyses)
+                {
+                    <p class="empty-state">Loading analyses...</p>
+                }
+                else if (!selectedAnalyses.Any())
+                {
+                    <p class="empty-state">No analyses saved for this project yet.</p>
+                }
+                else
+                {
+                    <div class="analysis-list">
+                        @foreach (var analysis in selectedAnalyses)
+                        {
+                            <article class="analysis-item">
+                                <div>
+                                    <strong>@analysis.Summary</strong>
+                                    <span>@FormatDate(analysis.CreatedAt)</span>
+                                </div>
+                                <dl>
+                                    <div>
+                                        <dt>Files</dt>
+                                        <dd>@analysis.FileCount</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Nodes</dt>
+                                        <dd>@analysis.NodeCount</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Edges</dt>
+                                        <dd>@analysis.EdgeCount</dd>
+                                    </div>
+                                    <div>
+                                        <dt>Endpoints</dt>
+                                        <dd>@analysis.EndpointCount</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    }
+</section>
+
+@code {
+    private List<ProjectDto> projects = new();
+    private List<ProjectAnalysisDto> selectedAnalyses = new();
+    private ProjectDto? selectedProject;
+    private Guid? selectedProjectId;
+    private bool isLoading = true;
+    private bool isLoadingAnalyses;
+    private string loadError = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            projects = await GraphServiceManager.GetProjectsAsync();
+            if (projects.FirstOrDefault() is { } firstProject)
+            {
+                await SelectProjectAsync(firstProject);
+            }
+        }
+        catch (Exception exception)
+        {
+            loadError = exception.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SelectProjectAsync(ProjectDto project)
+    {
+        selectedProject = project;
+        selectedProjectId = project.Id;
+        selectedAnalyses = new List<ProjectAnalysisDto>();
+        isLoadingAnalyses = true;
+
+        try
+        {
+            selectedAnalyses = await GraphServiceManager.GetProjectAnalysesAsync(project.Id);
+        }
+        catch (Exception exception)
+        {
+            loadError = exception.Message;
+        }
+        finally
+        {
+            isLoadingAnalyses = false;
+        }
+    }
+
+    private static string FormatDate(DateTime date)
+    {
+        return date.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+    }
+}

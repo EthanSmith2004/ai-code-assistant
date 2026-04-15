@@ -1,0 +1,49 @@
+@page "/settings"
+
+<section class="settings-page">
+    <header class="page-heading">
+        <div>
+            <span class="page-kicker">Settings</span>
+            <h1>CodeSight Settings</h1>
+            <p>Local configuration for the portfolio build.</p>
+        </div>
+    </header>
+
+    <div class="settings-grid">
+        <section class="settings-panel">
+            <h2>Runtime</h2>
+            <dl>
+                <div>
+                    <dt>API base URL</dt>
+                    <dd>http://localhost:5217</dd>
+                </div>
+                <div>
+                    <dt>Database provider</dt>
+                    <dd>MySQL via Entity Framework Core</dd>
+                </div>
+                <div>
+                    <dt>Connection key</dt>
+                    <dd>ConnectionStrings:CodeSightDatabase</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="settings-panel">
+            <h2>Roadmap</h2>
+            <dl>
+                <div>
+                    <dt>Authentication</dt>
+                    <dd>Not enabled in Phase 2</dd>
+                </div>
+                <div>
+                    <dt>User scope</dt>
+                    <dd>Single-user local workspace</dd>
+                </div>
+                <div>
+                    <dt>Saved analyses</dt>
+                    <dd>Enabled for scanned and mock graph sessions</dd>
+                </div>
+            </dl>
+        </section>
+    </div>
+</section>

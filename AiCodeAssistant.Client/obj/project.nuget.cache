@@ -1,10 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "VMw0LVF4JBw=",
+  "dgSpecHash": "NumsdaCk/WY=",
   "success": true,
-  "projectFilePath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
+  "projectFilePath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Client\\AiCodeAssistant.Client.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\detec\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.5\\microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512"
+    "C:\\Users\\ethan\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.6\\microsoft.aspnetcore.app.internal.assets.10.0.6.nupkg.sha512"
   ],
   "logs": []
 }

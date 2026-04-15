@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {}
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {}
   },
   "projects": {
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
         "projectName": "AiCodeAssistant.Domain",
-        "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
-        "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-        "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\obj\\",
+        "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
+        "packagesPath": "C:\\Users\\ethan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ethan\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -65,7 +59,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

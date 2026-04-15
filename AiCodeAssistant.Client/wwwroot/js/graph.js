@@ -3,7 +3,10 @@ let currentLayoutName = 'breadthfirst';
 let currentViewMode = 'Full';
 let graphResizeObserver = null;
 let graphFitTimeout = null;
+let graphFitFrame = null;
 let graphFitRunId = 0;
+let graphLayoutRunId = 0;
+let graphLayoutReady = false;
 let horizontalPanBar = null;
 let horizontalPanThumb = null;
 let verticalPanBar = null;
@@ -11,14 +14,17 @@ let verticalPanThumb = null;
 
 const focusClassNames = 'selected-node neighbor-node connected-edge dimmed-element flow-node flow-edge flow-dimmed-element endpoint-node endpoint-path-node endpoint-path-edge endpoint-dimmed-element hotspot-node hotspot-dimmed-element';
 const graphMotion = {
-    loadDuration: 360,
+    loadDuration: 320,
     focusDuration: 230,
-    loadPadding: 34,
-    focusPadding: 42,
-    fullMinZoom: 0.18,
+    loadPadding: 52,
+    focusPadding: 46,
+    fullMinZoom: 0.28,
     focusMinZoom: 0.5,
     zoomStep: 1.1,
     panStep: 72,
+    layoutSettleDelay: 48,
+    fitRetryDelay: 72,
+    maxFitAttempts: 6,
     easing: 'ease-in-out'
 };
 
@@ -61,10 +67,11 @@ const getOption = (options, name, fallback) => {
 };
 
 const isFocusView = viewMode => viewMode === 'FlowFocus' || viewMode === 'EndpointFocus';
+const normalizeLayoutName = layoutName => layoutName === 'cose' ? 'cose' : 'breadthfirst';
 
 const createLayoutOptions = (layoutName, viewMode) => {
     const focusView = isFocusView(viewMode);
-    const padding = focusView ? 34 : 30;
+    const padding = focusView ? 34 : 46;
 
     if (layoutName === 'cose') {
         return {
@@ -72,27 +79,14 @@ const createLayoutOptions = (layoutName, viewMode) => {
             animate: true,
             animationDuration: focusView ? 240 : 320,
             animationEasing: graphMotion.easing,
-            fit: true,
+            fit: false,
             padding,
-            nodeRepulsion: focusView ? 3000 : 3900,
-            idealEdgeLength: focusView ? 64 : 78,
+            nodeRepulsion: focusView ? 3200 : 4700,
+            idealEdgeLength: focusView ? 72 : 98,
             edgeElasticity: 150,
             gravity: focusView ? 1 : 0.86,
-            componentSpacing: focusView ? 22 : 28,
+            componentSpacing: focusView ? 28 : 44,
             randomize: false
-        };
-    }
-
-    if (layoutName === 'circle') {
-        return {
-            name: 'circle',
-            animate: true,
-            animationDuration: focusView ? 220 : 300,
-            animationEasing: graphMotion.easing,
-            fit: true,
-            padding,
-            avoidOverlap: true,
-            spacingFactor: focusView ? 0.76 : 0.92
         };
     }
 
@@ -102,9 +96,9 @@ const createLayoutOptions = (layoutName, viewMode) => {
         animate: true,
         animationDuration: focusView ? 230 : 320,
         animationEasing: graphMotion.easing,
-        fit: true,
+        fit: false,
         padding,
-        spacingFactor: focusView ? 0.72 : 0.84,
+        spacingFactor: focusView ? 0.82 : 1.06,
         nodeDimensionsIncludeLabels: true
     };
 };
@@ -112,6 +106,13 @@ const createLayoutOptions = (layoutName, viewMode) => {
 const getReadableMinZoom = viewMode => isFocusView(viewMode)
     ? graphMotion.focusMinZoom
     : graphMotion.fullMinZoom;
+
+const isGraphDestroyed = graph => !graph || (typeof graph.destroyed === 'function' && graph.destroyed());
+
+const isGraphReadyForFit = graph => !isGraphDestroyed(graph)
+    && !graph.elements().empty()
+    && graph.width() > 0
+    && graph.height() > 0;
 
 const getGraphPanLimits = graph => {
     if (!graph || graph.elements().empty()) {
@@ -236,8 +237,18 @@ const clampReadableZoom = (graph, elements, viewMode, padding = 0) => {
     updatePanBars();
 };
 
+const finalizeGraphFit = (graph, elements, viewMode, padding) => {
+    if (isGraphDestroyed(graph) || !elements || elements.empty()) {
+        return;
+    }
+
+    graph.center(elements);
+    clampReadableZoom(graph, elements, viewMode, padding);
+    updatePanBars();
+};
+
 const animateGraphFit = (graph, elements, padding, duration, viewMode = currentViewMode) => {
-    if (!graph || !elements || elements.empty()) {
+    if (isGraphDestroyed(graph) || !elements || elements.empty()) {
         return;
     }
 
@@ -246,6 +257,13 @@ const animateGraphFit = (graph, elements, padding, duration, viewMode = currentV
     }
 
     graph.resize();
+
+    if (duration <= 0) {
+        graph.fit(elements, padding);
+        finalizeGraphFit(graph, elements, viewMode, padding);
+        return;
+    }
+
     graph.animate({
         fit: {
             eles: elements,
@@ -255,17 +273,9 @@ const animateGraphFit = (graph, elements, padding, duration, viewMode = currentV
         duration,
         easing: graphMotion.easing,
         complete: () => {
-            graph.center(elements);
-            clampReadableZoom(graph, elements, viewMode, padding);
-            updatePanBars();
+            window.requestAnimationFrame(() => finalizeGraphFit(graph, elements, viewMode, padding));
         }
     });
-
-    window.setTimeout(() => {
-        graph.center(elements);
-        clampReadableZoom(graph, elements, viewMode, padding);
-        updatePanBars();
-    }, duration + 40);
 };
 
 const fitLoadedGraph = (graph, viewMode, duration = graphMotion.loadDuration) => {
@@ -274,47 +284,80 @@ const fitLoadedGraph = (graph, viewMode, duration = graphMotion.loadDuration) =>
 };
 
 const fitGraphNow = (graph, viewMode, duration = graphMotion.loadDuration) => {
-    if (!graph || (typeof graph.destroyed === 'function' && graph.destroyed())) {
+    if (isGraphDestroyed(graph)) {
         return;
     }
 
     graph.resize();
+    if (!isGraphReadyForFit(graph)) {
+        return;
+    }
+
     fitLoadedGraph(graph, viewMode, duration);
 };
 
-const runPostLayoutFit = (graph, viewMode) => {
-    const fitRunId = ++graphFitRunId;
+const runGraphLayoutAndFit = (graph, layoutName, viewMode) => {
+    if (isGraphDestroyed(graph) || graph.elements().empty()) {
+        graphLayoutReady = true;
+        updatePanBars();
+        return;
+    }
 
-    [20, 160, 320].forEach((delay, index) => {
-        window.setTimeout(() => {
-            window.requestAnimationFrame(() => {
-                window.requestAnimationFrame(() => {
-                    if (fitRunId !== graphFitRunId || graph !== currentGraph) {
-                        return;
-                    }
+    graphLayoutReady = false;
+    const layoutRunId = ++graphLayoutRunId;
+    const layout = graph.layout(createLayoutOptions(normalizeLayoutName(layoutName), viewMode));
 
-                    fitGraphNow(
-                        graph,
-                        viewMode,
-                        index === 0 ? graphMotion.loadDuration : Math.round(graphMotion.loadDuration / 2));
-                });
-            });
-        }, delay);
+    graph.one('layoutstop', () => {
+        if (layoutRunId !== graphLayoutRunId || graph !== currentGraph || isGraphDestroyed(graph)) {
+            return;
+        }
+
+        graphLayoutReady = true;
+        scheduleGraphFit(graph, viewMode, graphMotion.layoutSettleDelay);
     });
+
+    layout.run();
 };
 
-const scheduleGraphFit = (graph, viewMode, delay = 0) => {
+const scheduleGraphFit = (graph, viewMode, delay = 0, duration = graphMotion.loadDuration, attempts = 0) => {
     if (graphFitTimeout) {
         window.clearTimeout(graphFitTimeout);
+        graphFitTimeout = null;
+    }
+
+    if (graphFitFrame) {
+        window.cancelAnimationFrame(graphFitFrame);
+        graphFitFrame = null;
     }
 
     const fitRunId = ++graphFitRunId;
     graphFitTimeout = window.setTimeout(() => {
-        if (fitRunId !== graphFitRunId) {
+        graphFitTimeout = null;
+
+        if (fitRunId !== graphFitRunId || graph !== currentGraph || isGraphDestroyed(graph)) {
             return;
         }
 
-        fitGraphNow(graph, viewMode);
+        graph.resize();
+        graphFitFrame = window.requestAnimationFrame(() => {
+            graphFitFrame = null;
+
+            if (fitRunId !== graphFitRunId || graph !== currentGraph || isGraphDestroyed(graph)) {
+                return;
+            }
+
+            graph.resize();
+
+            if (!isGraphReadyForFit(graph)) {
+                if (attempts < graphMotion.maxFitAttempts) {
+                    scheduleGraphFit(graph, viewMode, graphMotion.fitRetryDelay, duration, attempts + 1);
+                }
+
+                return;
+            }
+
+            fitGraphNow(graph, viewMode, duration);
+        });
     }, delay);
 };
 
@@ -325,6 +368,13 @@ const cancelPendingGraphFits = () => {
         window.clearTimeout(graphFitTimeout);
         graphFitTimeout = null;
     }
+
+    if (graphFitFrame) {
+        window.cancelAnimationFrame(graphFitFrame);
+        graphFitFrame = null;
+    }
+
+    graphLayoutRunId++;
 };
 
 const clearFocusClasses = graph => {
@@ -346,7 +396,7 @@ const attachResizeObserver = element => {
     }
 
     graphResizeObserver = new ResizeObserver(() => {
-        if (!currentGraph) {
+        if (!currentGraph || !graphLayoutReady) {
             return;
         }
 
@@ -603,24 +653,25 @@ const graphStyle = [
         selector: 'node',
         style: {
             'shape': 'round-rectangle',
-            'background-color': '#071525',
+            'background-color': '#111827',
             'label': 'data(displayLabel)',
             'color': '#f8fbff',
             'text-valign': 'center',
             'text-halign': 'center',
             'font-family': 'Inter, Segoe UI, sans-serif',
-            'font-size': '10.8px',
+            'font-size': '11.2px',
             'font-weight': 760,
             'text-wrap': 'none',
             'text-max-width': 'data(textWidth)',
-            'text-outline-color': '#020611',
-            'text-outline-width': 2.4,
+            'text-outline-color': '#05070b',
+            'text-outline-width': 2.6,
+            'min-zoomed-font-size': 7,
             'width': 'data(width)',
             'height': 'data(height)',
             'border-width': 2,
-            'border-color': '#22d3ee',
-            'underlay-color': '#67e8f9',
-            'underlay-opacity': 0.13,
+            'border-color': '#94a3b8',
+            'underlay-color': '#93c5fd',
+            'underlay-opacity': 0.1,
             'underlay-padding': 10,
             'overlay-opacity': 0,
             'transition-property': 'background-color, border-color, border-width, opacity, text-opacity, width, height, underlay-opacity',
@@ -631,53 +682,53 @@ const graphStyle = [
     {
         selector: 'node[layer = "Frontend"]',
         style: {
-            'background-color': '#061a32',
-            'border-color': '#22d3ee',
-            'underlay-color': '#38bdf8'
+            'background-color': '#102033',
+            'border-color': '#60a5fa',
+            'underlay-color': '#60a5fa'
         }
     },
     {
         selector: 'node[layer = "Api"]',
         style: {
-            'background-color': '#1b1035',
-            'border-color': '#d946ef',
-            'underlay-color': '#d946ef'
+            'background-color': '#10251f',
+            'border-color': '#34d399',
+            'underlay-color': '#34d399'
         }
     },
     {
         selector: 'node[layer = "Application"]',
         style: {
-            'background-color': '#091f2b',
-            'border-color': '#8b5cf6',
-            'underlay-color': '#5eead4'
+            'background-color': '#172018',
+            'border-color': '#a3e635',
+            'underlay-color': '#86efac'
         }
     },
     {
         selector: 'node[layer = "Data"]',
         style: {
-            'background-color': '#191927',
-            'border-color': '#f59e0b',
-            'underlay-color': '#f59e0b'
+            'background-color': '#211b12',
+            'border-color': '#fbbf24',
+            'underlay-color': '#fbbf24'
         }
     },
     {
         selector: 'node[layer = "Infrastructure"]',
         style: {
-            'background-color': '#101827',
-            'border-color': '#818cf8',
-            'underlay-color': '#818cf8'
+            'background-color': '#171923',
+            'border-color': '#cbd5e1',
+            'underlay-color': '#94a3b8'
         }
     },
     {
         selector: 'node[type = "Endpoint"]',
         style: {
             'shape': 'round-rectangle',
-            'background-color': '#071c2b',
-            'border-color': '#67e8f9',
+            'background-color': '#111c2a',
+            'border-color': '#bfdbfe',
             'border-width': 3,
-            'underlay-color': '#d946ef',
-            'underlay-opacity': 0.22,
-            'font-size': '11px',
+            'underlay-color': '#60a5fa',
+            'underlay-opacity': 0.18,
+            'font-size': '11.4px',
             'text-outline-width': 2.8
         }
     },
@@ -690,17 +741,17 @@ const graphStyle = [
     {
         selector: 'node[type = "Service"], node[type = "Analyzer"], node[type = "Scanner"], node[type = "Detector"], node[type = "Simplifier"]',
         style: {
-            'background-color': '#081d22',
-            'border-color': '#5eead4',
-            'underlay-color': '#22d3ee'
+            'background-color': '#10251f',
+            'border-color': '#34d399',
+            'underlay-color': '#34d399'
         }
     },
     {
         selector: 'node[type = "Repository"], node[type = "Database"]',
         style: {
             'shape': 'round-rectangle',
-            'background-color': '#191829',
-            'border-color': '#f59e0b'
+            'background-color': '#211b12',
+            'border-color': '#fbbf24'
         }
     },
     {
@@ -721,8 +772,8 @@ const graphStyle = [
             'taxi-direction': 'downward',
             'taxi-turn': 10,
             'taxi-turn-min-distance': 10,
-            'line-color': '#3f5570',
-            'target-arrow-color': '#67e8f9',
+            'line-color': '#4b5563',
+            'target-arrow-color': '#94a3b8',
             'target-arrow-shape': 'triangle',
             'arrow-scale': 0.95,
             'width': 2,
@@ -730,13 +781,15 @@ const graphStyle = [
             'font-family': 'Inter, Segoe UI, sans-serif',
             'font-size': '8.5px',
             'font-weight': 650,
-            'color': '#d8f7ff',
-            'text-background-color': '#030712',
+            'color': '#dbeafe',
+            'text-background-color': '#05070b',
             'text-background-opacity': 0.9,
             'text-background-padding': 3,
             'text-rotation': 'autorotate',
             'text-margin-y': -8,
-            'opacity': 0.82,
+            'opacity': 0.76,
+            'text-opacity': 0.78,
+            'min-zoomed-font-size': 6,
             'transition-property': 'line-color, target-arrow-color, width, opacity, text-opacity, color',
             'transition-duration': '180ms',
             'transition-timing-function': 'ease-in-out'
@@ -745,16 +798,16 @@ const graphStyle = [
     {
         selector: 'edge[relationship = "Uses"], edge[relationship = "Calls"]',
         style: {
-            'line-color': '#a855f7',
-            'target-arrow-color': '#d946ef',
-            'color': '#e9d5ff'
+            'line-color': '#818cf8',
+            'target-arrow-color': '#a5b4fc',
+            'color': '#e0e7ff'
         }
     },
     {
         selector: 'edge[relationship = "MapsTo"]',
         style: {
-            'line-color': '#22d3ee',
-            'target-arrow-color': '#d946ef',
+            'line-color': '#2dd4bf',
+            'target-arrow-color': '#60a5fa',
             'width': 3.2,
             'color': '#cffafe'
         }
@@ -785,8 +838,8 @@ const graphStyle = [
         style: {
             'border-color': '#ffffff',
             'border-width': 4,
-            'underlay-color': '#67e8f9',
-            'underlay-opacity': 0.34,
+            'underlay-color': '#93c5fd',
+            'underlay-opacity': 0.3,
             'underlay-padding': 14,
             'opacity': 1,
             'z-index': 30
@@ -795,7 +848,7 @@ const graphStyle = [
     {
         selector: 'node.neighbor-node',
         style: {
-            'border-color': '#c084fc',
+            'border-color': '#86efac',
             'border-width': 3,
             'underlay-opacity': 0.22,
             'opacity': 1,
@@ -805,8 +858,8 @@ const graphStyle = [
     {
         selector: 'edge.connected-edge',
         style: {
-            'line-color': '#67e8f9',
-            'target-arrow-color': '#f0abfc',
+            'line-color': '#93c5fd',
+            'target-arrow-color': '#bfdbfe',
             'width': 4,
             'color': '#f8fafc',
             'opacity': 1,
@@ -824,9 +877,9 @@ const graphStyle = [
     {
         selector: 'node.flow-node',
         style: {
-            'border-color': '#d946ef',
+            'border-color': '#34d399',
             'border-width': 3,
-            'underlay-color': '#d946ef',
+            'underlay-color': '#34d399',
             'underlay-opacity': 0.24,
             'opacity': 1,
             'z-index': 20
@@ -835,10 +888,10 @@ const graphStyle = [
     {
         selector: 'edge.flow-edge',
         style: {
-            'line-color': '#d946ef',
-            'target-arrow-color': '#67e8f9',
+            'line-color': '#34d399',
+            'target-arrow-color': '#93c5fd',
             'width': 3,
-            'color': '#f5d0fe',
+            'color': '#d1fae5',
             'opacity': 1,
             'text-opacity': 1,
             'z-index': 14
@@ -854,9 +907,9 @@ const graphStyle = [
     {
         selector: 'node.endpoint-path-node',
         style: {
-            'border-color': '#67e8f9',
+            'border-color': '#93c5fd',
             'border-width': 3,
-            'underlay-color': '#67e8f9',
+            'underlay-color': '#93c5fd',
             'underlay-opacity': 0.24,
             'opacity': 1,
             'z-index': 20
@@ -867,8 +920,8 @@ const graphStyle = [
         style: {
             'border-color': '#f8fafc',
             'border-width': 5,
-            'underlay-color': '#d946ef',
-            'underlay-opacity': 0.36,
+            'underlay-color': '#60a5fa',
+            'underlay-opacity': 0.3,
             'underlay-padding': 16,
             'opacity': 1,
             'z-index': 32
@@ -877,8 +930,8 @@ const graphStyle = [
     {
         selector: 'edge.endpoint-path-edge',
         style: {
-            'line-color': '#22d3ee',
-            'target-arrow-color': '#d946ef',
+            'line-color': '#60a5fa',
+            'target-arrow-color': '#93c5fd',
             'width': 4,
             'color': '#cffafe',
             'opacity': 1,
@@ -957,6 +1010,9 @@ window.graphInterop = {
             return;
         }
 
+        cancelPendingGraphFits();
+        graphLayoutReady = false;
+
         if (currentGraph) {
             currentGraph.destroy();
             currentGraph = null;
@@ -966,7 +1022,7 @@ window.graphInterop = {
         existing.innerHTML = '';
 
         const viewMode = getOption(options, 'viewMode', 'Full');
-        const layoutName = getOption(options, 'layout', 'breadthfirst');
+        const layoutName = normalizeLayoutName(getOption(options, 'layout', 'breadthfirst'));
         currentLayoutName = layoutName;
         currentViewMode = viewMode;
 
@@ -977,7 +1033,9 @@ window.graphInterop = {
                 ...edges.map(normalizeEdge)
             ],
             style: graphStyle,
-            layout: createLayoutOptions(layoutName, viewMode),
+            layout: {
+                name: 'preset'
+            },
             minZoom: 0.12,
             maxZoom: 2.4,
             wheelSensitivity: 0.08,
@@ -994,11 +1052,7 @@ window.graphInterop = {
         attachHorizontalPanBar();
         attachVerticalPanBar();
 
-        cy.one('layoutstop', () => {
-            runPostLayoutFit(cy, viewMode);
-        });
-        cy.ready(() => runPostLayoutFit(cy, viewMode));
-        runPostLayoutFit(cy, viewMode);
+        cy.ready(() => runGraphLayoutAndFit(cy, layoutName, viewMode));
 
         cy.on('tap', 'node', event => {
             const nodeId = event.target.id();
@@ -1040,10 +1094,9 @@ window.graphInterop = {
             return;
         }
 
+        cancelPendingGraphFits();
         clearFocusClasses(currentGraph);
-        const layout = currentGraph.layout(createLayoutOptions(currentLayoutName, currentViewMode));
-        currentGraph.one('layoutstop', () => scheduleGraphFit(currentGraph, currentViewMode, 40));
-        layout.run();
+        runGraphLayoutAndFit(currentGraph, currentLayoutName, currentViewMode);
     },
 
     toggleFullscreen: async () => {

@@ -1,45 +1,39 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj": {}
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj": {}
   },
   "projects": {
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj": {
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj",
+        "projectUniqueName": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj",
         "projectName": "AiCodeAssistant.API",
-        "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj",
-        "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-        "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\obj\\",
+        "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\AiCodeAssistant.API.csproj",
+        "packagesPath": "C:\\Users\\ethan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.API\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ethan\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
               },
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
               },
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj"
               }
             }
           }
@@ -63,6 +57,26 @@
             "Microsoft.AspNetCore.OpenApi": {
               "target": "Package",
               "version": "[10.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "MySql.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.1, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
@@ -88,7 +102,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
@@ -506,36 +520,30 @@
         }
       }
     },
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj",
+        "projectUniqueName": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj",
         "projectName": "AiCodeAssistant.Application",
-        "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj",
-        "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-        "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\obj\\",
+        "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj",
+        "packagesPath": "C:\\Users\\ethan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ethan\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
               }
             }
           }
@@ -571,7 +579,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -849,28 +857,22 @@
         }
       }
     },
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
+        "projectUniqueName": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
         "projectName": "AiCodeAssistant.Domain",
-        "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
-        "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-        "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\obj\\",
+        "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj",
+        "packagesPath": "C:\\Users\\ethan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ethan\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -910,7 +912,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",
@@ -1188,39 +1190,33 @@
         }
       }
     },
-    "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj": {
+    "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj",
         "projectName": "AiCodeAssistant.Infrastructure",
-        "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\detec\\.nuget\\packages\\",
-        "outputPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\obj\\",
+        "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\AiCodeAssistant.Infrastructure.csproj",
+        "packagesPath": "C:\\Users\\ethan\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\detec\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\ethan\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net10.0": {
             "targetAlias": "net10.0",
             "projectReferences": {
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Application\\AiCodeAssistant.Application.csproj"
               },
-              "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
-                "projectPath": "D:\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
+              "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj": {
+                "projectPath": "C:\\Users\\ethan\\Fork\\ai-code-assistant\\AiCodeAssistant.Domain\\AiCodeAssistant.Domain.csproj"
               }
             }
           }
@@ -1240,6 +1236,16 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[10.0.6, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[10.0.6, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -1256,7 +1262,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

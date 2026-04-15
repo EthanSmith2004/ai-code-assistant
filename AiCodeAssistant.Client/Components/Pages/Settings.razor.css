@@ -1,0 +1,87 @@
+.settings-page {
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem;
+    background: #070910;
+    color: #f2f5fb;
+}
+
+.page-heading {
+    margin-bottom: 1rem;
+}
+
+.page-heading h1,
+.settings-panel h2 {
+    margin: 0;
+}
+
+.page-heading h1 {
+    font-size: 1.65rem;
+    font-weight: 820;
+}
+
+.page-heading p,
+.settings-panel dt {
+    color: #a8b0c1;
+}
+
+.page-heading p {
+    margin: 0.35rem 0 0;
+}
+
+.page-kicker {
+    color: #67e8f9;
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.settings-panel {
+    border: 1px solid rgba(174, 184, 204, 0.14);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+        #11131a;
+    padding: 0.95rem;
+}
+
+.settings-panel h2 {
+    font-size: 1.05rem;
+    margin-bottom: 0.8rem;
+}
+
+.settings-panel dl {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+}
+
+.settings-panel div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.settings-panel dt {
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.settings-panel dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}

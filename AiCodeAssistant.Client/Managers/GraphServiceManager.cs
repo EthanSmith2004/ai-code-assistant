@@ -1,6 +1,7 @@
 using AiCodeAssistant.Client.Services.Rest;
 using AiCodeAssistant.Domain.Analysis;
 using AiCodeAssistant.Domain.Contracts.Ai;
+using AiCodeAssistant.Domain.Contracts.Projects;
 using AiCodeAssistant.Domain.Entities;
 using AiCodeAssistant.Domain.Graph;
 
@@ -53,5 +54,30 @@ public class GraphServiceManager
     public async Task<ExplainEndpointResponse> ExplainEndpointAsync(ExplainEndpointRequest request)
     {
         return await _graphRestService.ExplainEndpointAsync(request);
+    }
+
+    public async Task<List<ProjectDto>> GetProjectsAsync()
+    {
+        return await _graphRestService.GetProjectsAsync();
+    }
+
+    public async Task<List<ProjectAnalysisDto>> GetProjectAnalysesAsync(Guid projectId)
+    {
+        return await _graphRestService.GetProjectAnalysesAsync(projectId);
+    }
+
+    public async Task<DashboardSummaryDto> GetDashboardSummaryAsync()
+    {
+        return await _graphRestService.GetDashboardSummaryAsync();
+    }
+
+    public async Task<ProjectDto> SaveProjectAsync(SaveProjectRequest request)
+    {
+        return await _graphRestService.SaveProjectAsync(request);
+    }
+
+    public async Task<ProjectAnalysisDto> SaveAnalysisAsync(Guid projectId, SaveAnalysisRequest request)
+    {
+        return await _graphRestService.SaveAnalysisAsync(projectId, request);
     }
 }

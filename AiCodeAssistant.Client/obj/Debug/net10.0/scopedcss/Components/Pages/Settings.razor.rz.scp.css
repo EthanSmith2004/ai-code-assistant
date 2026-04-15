@@ -1,0 +1,87 @@
+.settings-page[b-qfrv6hyjjd] {
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem;
+    background: #070910;
+    color: #f2f5fb;
+}
+
+.page-heading[b-qfrv6hyjjd] {
+    margin-bottom: 1rem;
+}
+
+.page-heading h1[b-qfrv6hyjjd],
+.settings-panel h2[b-qfrv6hyjjd] {
+    margin: 0;
+}
+
+.page-heading h1[b-qfrv6hyjjd] {
+    font-size: 1.65rem;
+    font-weight: 820;
+}
+
+.page-heading p[b-qfrv6hyjjd],
+.settings-panel dt[b-qfrv6hyjjd] {
+    color: #a8b0c1;
+}
+
+.page-heading p[b-qfrv6hyjjd] {
+    margin: 0.35rem 0 0;
+}
+
+.page-kicker[b-qfrv6hyjjd] {
+    color: #67e8f9;
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.settings-grid[b-qfrv6hyjjd] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.settings-panel[b-qfrv6hyjjd] {
+    border: 1px solid rgba(174, 184, 204, 0.14);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+        #11131a;
+    padding: 0.95rem;
+}
+
+.settings-panel h2[b-qfrv6hyjjd] {
+    font-size: 1.05rem;
+    margin-bottom: 0.8rem;
+}
+
+.settings-panel dl[b-qfrv6hyjjd] {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+}
+
+.settings-panel div[b-qfrv6hyjjd] {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.settings-panel dt[b-qfrv6hyjjd] {
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.settings-panel dd[b-qfrv6hyjjd] {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 800px) {
+    .settings-grid[b-qfrv6hyjjd] {
+        grid-template-columns: 1fr;
+    }
+}
