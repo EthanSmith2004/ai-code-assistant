@@ -178,10 +178,6 @@ D:\Fork\ai-code-assistant\AiCodeAssistant.Client\bin\CodexCheck\AiCodeAssistant.
 D:\Fork\ai-code-assistant\AiCodeAssistant.Client\bin\CodexCheck\AiCodeAssistant.Domain.dll
 D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\AiCodeAssistant.Client.sourcelink.json
 D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\AiCodeAssistant.Client.pdb
-D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\wuh4ygmguz-{0}-eebdc0wk22-eebdc0wk22.gz
-D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\64ecyvpjr4-{0}-jwj075kb37-jwj075kb37.gz
-D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-24e4cbtucs-24e4cbtucs.gz
-D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-24e4cbtucs-24e4cbtucs.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\bin\Debug\net10.0\appsettings.json
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\bin\Debug\net10.0\AiCodeAssistant.Client.staticwebassets.runtime.json
@@ -286,3 +282,12 @@ C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\s
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\wuh4ygmguz-{0}-sr59gamj1f-sr59gamj1f.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-78eusqnqe4-78eusqnqe4.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-78eusqnqe4-78eusqnqe4.gz
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Dashboard.razor.rz.scp.css
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Login.razor.rz.scp.css
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\ProjectHistory.razor.rz.scp.css
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Register.razor.rz.scp.css
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Settings.razor.rz.scp.css
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\wuh4ygmguz-{0}-78css1q096-78css1q096.gz
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\64ecyvpjr4-{0}-zo2ofo7vwe-zo2ofo7vwe.gz
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-78eusqnqe4-78eusqnqe4.gz
+D:\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-78eusqnqe4-78eusqnqe4.gz
