@@ -1,6 +1,4 @@
 @page "/settings"
-@rendermode InteractiveServer
-
 @inject AiCodeAssistant.Client.Services.UserPreferencesService UserPreferencesService
 
 <section class="settings-page">
@@ -62,11 +60,11 @@
             <dl>
                 <div>
                     <dt>Authentication</dt>
-                    <dd>Not enabled in Phase 2</dd>
+                    <dd>JWT login is enabled</dd>
                 </div>
                 <div>
                     <dt>User scope</dt>
-                    <dd>Single-user local workspace</dd>
+                    <dd>Projects and analyses are scoped to your account</dd>
                 </div>
                 <div>
                     <dt>Saved analyses</dt>

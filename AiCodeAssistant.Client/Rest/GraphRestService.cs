@@ -1,5 +1,7 @@
+using System.Net.Http.Headers;
 using System.Net;
 using System.Net.Http.Json;
+using AiCodeAssistant.Client.Services;
 using AiCodeAssistant.Domain.Analysis;
 using AiCodeAssistant.Domain.Contracts.Ai;
 using AiCodeAssistant.Domain.Contracts.Projects;
@@ -12,34 +14,40 @@ public class GraphRestService
 {
     private const string ApiBaseUrl = "http://localhost:5217";
     private readonly HttpClient _httpClient;
+    private readonly AuthService _authService;
 
-    public GraphRestService(HttpClient httpClient)
+    public GraphRestService(HttpClient httpClient, AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
     }
 
     public async Task<List<GraphNode>> GetNodesAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<GraphNode>>($"{ApiBaseUrl}/api/graph/nodes")
-               ?? new List<GraphNode>();
+        return await GetForJsonAsync<List<GraphNode>>(
+            $"{ApiBaseUrl}/api/graph/nodes",
+            "graph nodes");
     }
 
     public async Task<List<GraphEdge>> GetEdgesAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<GraphEdge>>($"{ApiBaseUrl}/api/graph/edges")
-               ?? new List<GraphEdge>();
+        return await GetForJsonAsync<List<GraphEdge>>(
+            $"{ApiBaseUrl}/api/graph/edges",
+            "graph edges");
     }
 
     public async Task<List<CodeFlow>> GetFlowsAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<CodeFlow>>($"{ApiBaseUrl}/api/graph/flows")
-               ?? new List<CodeFlow>();
+        return await GetForJsonAsync<List<CodeFlow>>(
+            $"{ApiBaseUrl}/api/graph/flows",
+            "graph flows");
     }
 
     public async Task<List<EndpointInfo>> GetEndpointsAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<EndpointInfo>>($"{ApiBaseUrl}/api/graph/endpoints")
-               ?? new List<EndpointInfo>();
+        return await GetForJsonAsync<List<EndpointInfo>>(
+            $"{ApiBaseUrl}/api/graph/endpoints",
+            "graph endpoints");
     }
 
     public async Task<CodeGraph> ScanSimplifiedAsync(ProjectScanRequest request)
@@ -116,7 +124,9 @@ public class GraphRestService
     {
         try
         {
-            var response = await _httpClient.GetAsync(url);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            await AttachAuthorizationHeaderAsync(request);
+            var response = await _httpClient.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -143,7 +153,12 @@ public class GraphRestService
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(url, request);
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(request)
+            };
+            await AttachAuthorizationHeaderAsync(httpRequest);
+            var response = await _httpClient.SendAsync(httpRequest);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -162,8 +177,27 @@ public class GraphRestService
         }
     }
 
+    private async Task AttachAuthorizationHeaderAsync(HttpRequestMessage request)
+    {
+        var token = await _authService.GetTokenAsync();
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
     private static string CreateApiErrorMessage(string operation, HttpStatusCode statusCode, string errorBody)
     {
+        if (statusCode == HttpStatusCode.Unauthorized)
+        {
+            return "Please log in to continue. If you already logged in, your session may have expired.";
+        }
+
+        if (statusCode == HttpStatusCode.Forbidden)
+        {
+            return "You do not have access to that CodeSight data.";
+        }
+
         if (statusCode == HttpStatusCode.NotFound)
         {
             return $"The API endpoint for {operation} was not found. Restart the API so the latest endpoint is loaded.";

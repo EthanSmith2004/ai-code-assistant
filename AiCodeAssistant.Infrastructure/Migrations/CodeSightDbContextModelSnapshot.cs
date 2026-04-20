@@ -76,15 +76,46 @@ namespace AiCodeAssistant.Infrastructure.Migrations
                     .HasMaxLength(600)
                     .HasColumnType("varchar(600)");
 
+                builder.Property<Guid>("UserId")
+                    .HasColumnType("char(36)");
+
                 builder.Property<DateTime>("UpdatedAt")
                     .HasColumnType("datetime(6)");
 
                 builder.HasKey("Id");
 
-                builder.HasIndex("SourceIdentifier")
+                builder.HasIndex("UserId");
+
+                builder.HasIndex("UserId", "SourceIdentifier")
                     .IsUnique();
 
                 builder.ToTable("Projects");
+            });
+
+            modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.User", builder =>
+            {
+                builder.Property<Guid>("Id")
+                    .HasColumnType("char(36)");
+
+                builder.Property<DateTime>("CreatedAt")
+                    .HasColumnType("datetime(6)");
+
+                builder.Property<string>("Email")
+                    .IsRequired()
+                    .HasMaxLength(320)
+                    .HasColumnType("varchar(320)");
+
+                builder.Property<string>("PasswordHash")
+                    .IsRequired()
+                    .HasMaxLength(600)
+                    .HasColumnType("varchar(600)");
+
+                builder.HasKey("Id");
+
+                builder.HasIndex("Email")
+                    .IsUnique();
+
+                builder.ToTable("Users");
             });
 
             modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.Analysis", builder =>
@@ -100,7 +131,20 @@ namespace AiCodeAssistant.Infrastructure.Migrations
 
             modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.Project", builder =>
             {
+                builder.HasOne("AiCodeAssistant.Domain.Persistence.User", "User")
+                    .WithMany("Projects")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
                 builder.Navigation("Analyses");
+
+                builder.Navigation("User");
+            });
+
+            modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.User", builder =>
+            {
+                builder.Navigation("Projects");
             });
         }
     }

@@ -1,0 +1,21 @@
+@inject NavigationManager Navigation
+
+<p class="route-state">Please log in to continue.</p>
+
+@code {
+    protected override void OnInitialized()
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (relativePath.StartsWith("login", StringComparison.OrdinalIgnoreCase) ||
+            relativePath.StartsWith("register", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var returnUrl = string.IsNullOrWhiteSpace(relativePath)
+            ? "/"
+            : $"/{relativePath}";
+
+        Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(returnUrl)}", replace: true);
+    }
+}

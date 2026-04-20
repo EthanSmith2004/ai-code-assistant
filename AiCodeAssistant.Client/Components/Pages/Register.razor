@@ -1,0 +1,126 @@
+@page "/register"
+@using AiCodeAssistant.Domain.Contracts.Auth
+@inject AiCodeAssistant.Client.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<section class="auth-page">
+    <div class="auth-panel">
+        <span class="page-kicker">CodeSight</span>
+        <h1>Create your account</h1>
+        <p>Start with a private workspace for your projects and analyses.</p>
+
+        <EditForm Model="registerModel" OnValidSubmit="HandleRegisterAsync" class="auth-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <label class="auth-field">
+                <span>Email</span>
+                <InputText @bind-Value="registerModel.Email" autocomplete="email" />
+            </label>
+
+            <label class="auth-field">
+                <span>Password</span>
+                <InputText type="password" @bind-Value="registerModel.Password" autocomplete="new-password" />
+            </label>
+
+            <label class="auth-field">
+                <span>Confirm password</span>
+                <InputText type="password" @bind-Value="confirmPassword" autocomplete="new-password" />
+            </label>
+
+            @if (!string.IsNullOrWhiteSpace(authError))
+            {
+                <p class="auth-message error">@authError</p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                <p class="auth-message success">@statusMessage</p>
+            }
+
+            <button type="submit" class="auth-submit" disabled="@isSubmitting">
+                @(isSubmitting ? "Creating account..." : "Create account")
+            </button>
+        </EditForm>
+
+        <p class="auth-switch">
+            Already have an account?
+            <a href="@CreateLoginLink()">Log in</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private readonly RegisterRequest registerModel = new();
+    private string confirmPassword = string.Empty;
+    private bool isSubmitting;
+    private string authError = string.Empty;
+    private string statusMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            NavigateToReturnUrl();
+        }
+    }
+
+    private async Task HandleRegisterAsync()
+    {
+        isSubmitting = true;
+        authError = string.Empty;
+        statusMessage = string.Empty;
+
+        try
+        {
+            if (!string.Equals(registerModel.Password, confirmPassword, StringComparison.Ordinal))
+            {
+                authError = "Passwords do not match.";
+                return;
+            }
+
+            await AuthService.RegisterAsync(registerModel);
+            statusMessage = "Account created. Opening your workspace...";
+            NavigateToReturnUrl();
+        }
+        catch (Exception exception)
+        {
+            authError = exception.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string CreateLoginLink()
+    {
+        return $"/login?returnUrl={Uri.EscapeDataString(GetSafeReturnUrl())}";
+    }
+
+    private void NavigateToReturnUrl()
+    {
+        Navigation.NavigateTo(GetSafeReturnUrl(), replace: true);
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        return IsSafeLocalUrl(ReturnUrl) ? ReturnUrl! : "/";
+    }
+
+    private static bool IsSafeLocalUrl(string? url)
+    {
+        return !string.IsNullOrWhiteSpace(url) &&
+               url.StartsWith("/", StringComparison.Ordinal) &&
+               !url.StartsWith("//", StringComparison.Ordinal) &&
+               !url.Contains("://", StringComparison.Ordinal);
+    }
+}

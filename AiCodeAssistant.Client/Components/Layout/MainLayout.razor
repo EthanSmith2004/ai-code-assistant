@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@inject AiCodeAssistant.Client.Services.AuthService AuthService
+@inject NavigationManager Navigation
 
 <div class="app-shell">
     <header class="app-header">
@@ -11,6 +13,8 @@
         </a>
 
         <nav class="shell-nav" aria-label="Primary navigation">
+            <AuthorizeView>
+                <Authorized>
             <NavLink class="shell-nav-link" href="/" Match="NavLinkMatch.All">
                 <span class="shell-nav-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
@@ -61,6 +65,41 @@
                 </span>
                 <span class="shell-nav-label">Settings</span>
             </NavLink>
+            <button type="button" class="shell-nav-button" @onclick="LogoutAsync">
+                <span class="shell-nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <path d="M16 17l5-5-5-5"></path>
+                        <path d="M21 12H9"></path>
+                    </svg>
+                </span>
+                <span class="shell-nav-label">Logout</span>
+            </button>
+                </Authorized>
+                <NotAuthorized>
+            <NavLink class="shell-nav-link" href="/login">
+                <span class="shell-nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <path d="M10 17l5-5-5-5"></path>
+                        <path d="M15 12H3"></path>
+                    </svg>
+                </span>
+                <span class="shell-nav-label">Login</span>
+            </NavLink>
+            <NavLink class="shell-nav-link" href="/register">
+                <span class="shell-nav-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <path d="M20 8v6"></path>
+                        <path d="M23 11h-6"></path>
+                    </svg>
+                </span>
+                <span class="shell-nav-label">Register</span>
+            </NavLink>
+                </NotAuthorized>
+            </AuthorizeView>
         </nav>
     </header>
 
@@ -76,3 +115,11 @@
     </div>
     <button type="button" class="dismiss" aria-label="Dismiss">x</button>
 </div>
+
+@code {
+    private async Task LogoutAsync()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", replace: true);
+    }
+}

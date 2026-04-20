@@ -4,6 +4,8 @@ public class Project
 {
     public Guid Id { get; set; }
 
+    public Guid UserId { get; set; }
+
     public string Name { get; set; } = string.Empty;
 
     public string FrameworkType { get; set; } = string.Empty;
@@ -13,6 +15,8 @@ public class Project
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public User? User { get; set; }
 
     public List<Analysis> Analyses { get; set; } = new();
 }

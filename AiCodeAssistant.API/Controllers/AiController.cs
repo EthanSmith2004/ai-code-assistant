@@ -1,10 +1,12 @@
 using AiCodeAssistant.Application.Interfaces;
 using AiCodeAssistant.Domain.Contracts.Ai;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AiCodeAssistant.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AiController : ControllerBase
 {

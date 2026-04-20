@@ -1,11 +1,13 @@
 using AiCodeAssistant.Application.Interfaces;
 using AiCodeAssistant.Domain.Analysis;
 using AiCodeAssistant.Domain.Graph;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AiCodeAssistant.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AnalysisController : ControllerBase
 {

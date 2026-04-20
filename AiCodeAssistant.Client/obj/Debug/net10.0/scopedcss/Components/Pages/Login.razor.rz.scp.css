@@ -1,0 +1,123 @@
+.auth-page[b-smjahrjys8] {
+    display: grid;
+    place-items: center;
+    min-height: 100%;
+    overflow: auto;
+    background: #070910;
+    color: #f2f5fb;
+    padding: 1rem;
+}
+
+.auth-panel[b-smjahrjys8] {
+    width: min(100%, 28rem);
+    border: 1px solid rgba(174, 184, 204, 0.14);
+    border-radius: 8px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0)),
+        #11131a;
+    padding: 1rem;
+}
+
+.page-kicker[b-smjahrjys8] {
+    color: #67e8f9;
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.auth-panel h1[b-smjahrjys8] {
+    margin: 0.35rem 0 0;
+    font-size: 1.65rem;
+    font-weight: 820;
+}
+
+.auth-panel p[b-smjahrjys8] {
+    color: #a8b0c1;
+    margin: 0.35rem 0 0;
+}
+
+.auth-form[b-smjahrjys8] {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.auth-field[b-smjahrjys8] {
+    display: grid;
+    gap: 0.38rem;
+}
+
+.auth-field span[b-smjahrjys8] {
+    color: #a8b0c1;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.auth-field input[b-smjahrjys8] {
+    width: 100%;
+    border: 1px solid rgba(174, 184, 204, 0.16);
+    border-radius: 8px;
+    background: rgba(9, 10, 15, 0.58);
+    color: #f2f5fb;
+    padding: 0.68rem;
+}
+
+.auth-field input:focus-visible[b-smjahrjys8] {
+    border-color: rgba(103, 232, 249, 0.58);
+    outline: none;
+}
+
+.auth-submit[b-smjahrjys8] {
+    border: 1px solid rgba(52, 211, 153, 0.34);
+    border-radius: 8px;
+    background: rgba(52, 211, 153, 0.1);
+    color: #d1fae5;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    padding: 0.72rem 0.85rem;
+}
+
+.auth-submit:hover:not(:disabled)[b-smjahrjys8],
+.auth-submit:focus-visible[b-smjahrjys8] {
+    border-color: rgba(103, 232, 249, 0.44);
+    color: #f8fafc;
+    outline: none;
+}
+
+.auth-submit:disabled[b-smjahrjys8] {
+    color: #747f95;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.auth-message[b-smjahrjys8],
+.validation-summary-errors[b-smjahrjys8] {
+    border: 1px solid rgba(174, 184, 204, 0.14);
+    border-radius: 8px;
+    padding: 0.65rem;
+}
+
+.auth-message.error[b-smjahrjys8],
+.validation-summary-errors[b-smjahrjys8] {
+    border-color: rgba(248, 113, 113, 0.26);
+    background: rgba(248, 113, 113, 0.1);
+    color: #fecaca;
+}
+
+.auth-message.success[b-smjahrjys8] {
+    border-color: rgba(52, 211, 153, 0.24);
+    background: rgba(52, 211, 153, 0.08);
+    color: #bbf7d0;
+}
+
+.auth-switch[b-smjahrjys8] {
+    margin-top: 1rem;
+}
+
+.auth-switch a[b-smjahrjys8] {
+    color: #dbeafe;
+    font-weight: 800;
+}

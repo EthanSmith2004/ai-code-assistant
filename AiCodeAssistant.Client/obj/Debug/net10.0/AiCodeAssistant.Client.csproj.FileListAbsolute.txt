@@ -211,7 +211,6 @@ C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\s
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Home.razor.rz.scp.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\bundle\AiCodeAssistant.Client.styles.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\projectbundle\AiCodeAssistant.Client.bundle.scp.css
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\wuh4ygmguz-{0}-59tkr4w6y5-59tkr4w6y5.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\eu9k2vcw6b-{0}-t1cqhe9u97-t1cqhe9u97.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\cviz4mk2a9-{0}-c2jlpeoesf-c2jlpeoesf.gz
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\ok4r1094x5-{0}-sejl45xvog-sejl45xvog.gz
@@ -282,5 +281,8 @@ C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\s
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\ProjectHistory.razor.rz.scp.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Settings.razor.rz.scp.css
 C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\64ecyvpjr4-{0}-9vcz0ltbht-9vcz0ltbht.gz
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-awjucjod3i-awjucjod3i.gz
-C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-awjucjod3i-awjucjod3i.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Login.razor.rz.scp.css
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\scopedcss\Components\Pages\Register.razor.rz.scp.css
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\wuh4ygmguz-{0}-sr59gamj1f-sr59gamj1f.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\3mf4ihh938-{0}-78eusqnqe4-78eusqnqe4.gz
+C:\Users\ethan\Fork\ai-code-assistant\AiCodeAssistant.Client\obj\Debug\net10.0\compressed\lr0cqez2sy-{0}-78eusqnqe4-78eusqnqe4.gz

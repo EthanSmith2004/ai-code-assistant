@@ -15,6 +15,7 @@ public class ProjectPersistenceService : IProjectPersistenceService
     }
 
     public async Task<ProjectDto> SaveProjectAsync(
+        Guid userId,
         SaveProjectRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -26,7 +27,9 @@ public class ProjectPersistenceService : IProjectPersistenceService
         var project = await _dbContext.Projects
             .Include(existingProject => existingProject.Analyses)
             .FirstOrDefaultAsync(
-                existingProject => existingProject.SourceIdentifier == sourceIdentifier,
+                existingProject =>
+                    existingProject.UserId == userId &&
+                    existingProject.SourceIdentifier == sourceIdentifier,
                 cancellationToken);
 
         if (project is null)
@@ -34,6 +37,7 @@ public class ProjectPersistenceService : IProjectPersistenceService
             project = new Project
             {
                 Id = Guid.NewGuid(),
+                UserId = userId,
                 SourceIdentifier = sourceIdentifier,
                 CreatedAt = now
             };
@@ -51,12 +55,17 @@ public class ProjectPersistenceService : IProjectPersistenceService
     }
 
     public async Task<ProjectAnalysisDto> SaveAnalysisAsync(
+        Guid userId,
         Guid projectId,
         SaveAnalysisRequest request,
         CancellationToken cancellationToken = default)
     {
         var project = await _dbContext.Projects
-            .FirstOrDefaultAsync(existingProject => existingProject.Id == projectId, cancellationToken);
+            .FirstOrDefaultAsync(
+                existingProject =>
+                    existingProject.Id == projectId &&
+                    existingProject.UserId == userId,
+                cancellationToken);
 
         if (project is null)
         {
@@ -84,11 +93,14 @@ public class ProjectPersistenceService : IProjectPersistenceService
         return ToAnalysisDto(analysis);
     }
 
-    public async Task<IReadOnlyList<ProjectDto>> GetProjectsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ProjectDto>> GetProjectsAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         var projects = await _dbContext.Projects
             .AsNoTracking()
             .Include(project => project.Analyses)
+            .Where(project => project.UserId == userId)
             .OrderByDescending(project => project.UpdatedAt)
             .ToListAsync(cancellationToken);
 
@@ -96,12 +108,16 @@ public class ProjectPersistenceService : IProjectPersistenceService
     }
 
     public async Task<IReadOnlyList<ProjectAnalysisDto>> GetProjectAnalysesAsync(
+        Guid userId,
         Guid projectId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Analyses
             .AsNoTracking()
-            .Where(analysis => analysis.ProjectId == projectId)
+            .Where(analysis =>
+                analysis.ProjectId == projectId &&
+                analysis.Project != null &&
+                analysis.Project.UserId == userId)
             .OrderByDescending(analysis => analysis.CreatedAt)
             .Select(analysis => new ProjectAnalysisDto
             {
@@ -117,11 +133,14 @@ public class ProjectPersistenceService : IProjectPersistenceService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<DashboardSummaryDto> GetDashboardSummaryAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         var projects = await _dbContext.Projects
             .AsNoTracking()
             .Include(project => project.Analyses)
+            .Where(project => project.UserId == userId)
             .OrderByDescending(project => project.UpdatedAt)
             .ToListAsync(cancellationToken);
         var analyses = projects

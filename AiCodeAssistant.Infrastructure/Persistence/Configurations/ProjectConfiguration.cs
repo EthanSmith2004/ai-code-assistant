@@ -30,7 +30,9 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(project => project.UpdatedAt)
             .IsRequired();
 
-        builder.HasIndex(project => project.SourceIdentifier)
+        builder.HasIndex(project => project.UserId);
+
+        builder.HasIndex(project => new { project.UserId, project.SourceIdentifier })
             .IsUnique();
 
         builder.HasMany(project => project.Analyses)

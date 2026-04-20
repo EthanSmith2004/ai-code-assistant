@@ -1,10 +1,13 @@
+using AiCodeAssistant.API.Auth;
 using AiCodeAssistant.Application.Interfaces;
 using AiCodeAssistant.Domain.Contracts.Projects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AiCodeAssistant.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ProjectsController : ControllerBase
 {
@@ -18,7 +21,9 @@ public class ProjectsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<ProjectDto>>> GetProjects(CancellationToken cancellationToken)
     {
-        var projects = await _projectPersistenceService.GetProjectsAsync(cancellationToken);
+        var projects = await _projectPersistenceService.GetProjectsAsync(
+            User.GetRequiredUserId(),
+            cancellationToken);
         return Ok(projects);
     }
 
@@ -29,7 +34,10 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            var project = await _projectPersistenceService.SaveProjectAsync(request, cancellationToken);
+            var project = await _projectPersistenceService.SaveProjectAsync(
+                User.GetRequiredUserId(),
+                request,
+                cancellationToken);
             return Ok(project);
         }
         catch (ArgumentException exception)
@@ -43,7 +51,10 @@ public class ProjectsController : ControllerBase
         Guid projectId,
         CancellationToken cancellationToken)
     {
-        var analyses = await _projectPersistenceService.GetProjectAnalysesAsync(projectId, cancellationToken);
+        var analyses = await _projectPersistenceService.GetProjectAnalysesAsync(
+            User.GetRequiredUserId(),
+            projectId,
+            cancellationToken);
         return Ok(analyses);
     }
 
@@ -55,7 +66,11 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            var analysis = await _projectPersistenceService.SaveAnalysisAsync(projectId, request, cancellationToken);
+            var analysis = await _projectPersistenceService.SaveAnalysisAsync(
+                User.GetRequiredUserId(),
+                projectId,
+                request,
+                cancellationToken);
             return Ok(analysis);
         }
         catch (KeyNotFoundException exception)

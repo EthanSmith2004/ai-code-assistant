@@ -2,6 +2,7 @@ using AiCodeAssistant.Client.Components;
 using AiCodeAssistant.Client.Services;
 using AiCodeAssistant.Client.Services.Managers;
 using AiCodeAssistant.Client.Services.Rest;
+using Microsoft.AspNetCore.Components.Authorization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +12,14 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<GraphRestService>();
 builder.Services.AddScoped<GraphServiceManager>();
+builder.Services.AddScoped<JwtAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(serviceProvider =>
+    serviceProvider.GetRequiredService<JwtAuthenticationStateProvider>());
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserPreferencesService>();
 builder.Services.AddHttpClient();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthorizationCore();
 
 var app = builder.Build();
 

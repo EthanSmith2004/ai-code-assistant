@@ -1,0 +1,55 @@
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (IsPublicRoute)
+{
+    <RouteView RouteData="RouteData" DefaultLayout="DefaultLayout" />
+}
+else if (isCheckingAuthentication)
+{
+    <LayoutView Layout="DefaultLayout">
+        <p class="route-state">Checking your session...</p>
+    </LayoutView>
+}
+else if (isAuthenticated)
+{
+    <RouteView RouteData="RouteData" DefaultLayout="DefaultLayout" />
+}
+else
+{
+    <LayoutView Layout="DefaultLayout">
+        <RedirectToLogin />
+    </LayoutView>
+}
+
+@code {
+    [Parameter]
+    public required RouteData RouteData { get; set; }
+
+    [Parameter]
+    public Type? DefaultLayout { get; set; }
+
+    private bool isCheckingAuthentication = true;
+    private bool isAuthenticated;
+
+    private bool IsPublicRoute =>
+        RouteData.PageType == typeof(Pages.Login) ||
+        RouteData.PageType == typeof(Pages.Register) ||
+        RouteData.PageType == typeof(Pages.NotFound) ||
+        RouteData.PageType == typeof(Pages.Error);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsPublicRoute)
+        {
+            isCheckingAuthentication = false;
+            isAuthenticated = false;
+            return;
+        }
+
+        isCheckingAuthentication = true;
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        isAuthenticated = authenticationState.User.Identity?.IsAuthenticated == true;
+        isCheckingAuthentication = false;
+    }
+}

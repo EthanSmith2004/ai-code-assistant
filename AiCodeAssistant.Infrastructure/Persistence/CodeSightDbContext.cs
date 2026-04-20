@@ -14,6 +14,8 @@ public class CodeSightDbContext : DbContext
 
     public DbSet<Analysis> Analyses => Set<Analysis>();
 
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CodeSightDbContext).Assembly);

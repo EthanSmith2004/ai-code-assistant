@@ -1,10 +1,12 @@
 using AiCodeAssistant.Application.Services; 
 using AiCodeAssistant.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AiCodeAssistant.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class GraphController : ControllerBase
 {

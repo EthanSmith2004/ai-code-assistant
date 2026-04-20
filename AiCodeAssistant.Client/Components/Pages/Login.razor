@@ -1,0 +1,114 @@
+@page "/login"
+@using AiCodeAssistant.Domain.Contracts.Auth
+@inject AiCodeAssistant.Client.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<section class="auth-page">
+    <div class="auth-panel">
+        <span class="page-kicker">CodeSight</span>
+        <h1>Welcome back</h1>
+        <p>Log in to open your workspace.</p>
+
+        <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync" class="auth-form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <label class="auth-field">
+                <span>Email</span>
+                <InputText @bind-Value="loginModel.Email" autocomplete="email" />
+            </label>
+
+            <label class="auth-field">
+                <span>Password</span>
+                <InputText type="password" @bind-Value="loginModel.Password" autocomplete="current-password" />
+            </label>
+
+            @if (!string.IsNullOrWhiteSpace(authError))
+            {
+                <p class="auth-message error">@authError</p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                <p class="auth-message success">@statusMessage</p>
+            }
+
+            <button type="submit" class="auth-submit" disabled="@isSubmitting">
+                @(isSubmitting ? "Logging in..." : "Log in")
+            </button>
+        </EditForm>
+
+        <p class="auth-switch">
+            New to CodeSight?
+            <a href="@CreateRegisterLink()">Create an account</a>
+        </p>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private readonly LoginRequest loginModel = new();
+    private bool isSubmitting;
+    private string authError = string.Empty;
+    private string statusMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        if (await AuthService.IsAuthenticatedAsync())
+        {
+            NavigateToReturnUrl();
+        }
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        isSubmitting = true;
+        authError = string.Empty;
+        statusMessage = string.Empty;
+
+        try
+        {
+            await AuthService.LoginAsync(loginModel);
+            statusMessage = "Logged in. Opening your workspace...";
+            NavigateToReturnUrl();
+        }
+        catch (Exception exception)
+        {
+            authError = exception.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string CreateRegisterLink()
+    {
+        return $"/register?returnUrl={Uri.EscapeDataString(GetSafeReturnUrl())}";
+    }
+
+    private void NavigateToReturnUrl()
+    {
+        Navigation.NavigateTo(GetSafeReturnUrl(), replace: true);
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        return IsSafeLocalUrl(ReturnUrl) ? ReturnUrl! : "/";
+    }
+
+    private static bool IsSafeLocalUrl(string? url)
+    {
+        return !string.IsNullOrWhiteSpace(url) &&
+               url.StartsWith("/", StringComparison.Ordinal) &&
+               !url.StartsWith("//", StringComparison.Ordinal) &&
+               !url.Contains("://", StringComparison.Ordinal);
+    }
+}
