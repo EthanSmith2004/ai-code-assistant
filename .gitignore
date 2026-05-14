@@ -1,0 +1,46 @@
+## Build outputs
+bin/
+obj/
+
+## IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+.idea/
+*.sln.iml
+
+## OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Railway / deployment build artifacts
+out-*/
+.build-validation/
+
+## Sensitive config — use environment variables or user secrets instead
+appsettings.Production.json
+appsettings.Staging.json
+
+## Logs
+*.log
+
+## NuGet
+*.nupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## Test results
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+## Publish output
+publish/

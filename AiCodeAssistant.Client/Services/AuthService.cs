@@ -1,32 +1,35 @@
 using System.Net;
 using System.Net.Http.Json;
 using AiCodeAssistant.Domain.Contracts.Auth;
+using Microsoft.Extensions.Configuration;
 
 namespace AiCodeAssistant.Client.Services;
 
 public class AuthService
 {
-    private const string ApiBaseUrl = "http://localhost:5217";
+    private readonly string _apiBaseUrl;
     private readonly HttpClient _httpClient;
     private readonly JwtAuthenticationStateProvider _authenticationStateProvider;
 
     public AuthService(
         HttpClient httpClient,
-        JwtAuthenticationStateProvider authenticationStateProvider)
+        JwtAuthenticationStateProvider authenticationStateProvider,
+        IConfiguration configuration)
     {
         _httpClient = httpClient;
         _authenticationStateProvider = authenticationStateProvider;
+        _apiBaseUrl = configuration["_apiBaseUrl"] ?? "http://localhost:5217";
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
-        var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/auth/register", request);
+        var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/auth/register", request);
         return await HandleAuthResponseAsync(response, "register");
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-        var response = await _httpClient.PostAsJsonAsync($"{ApiBaseUrl}/api/auth/login", request);
+        var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/api/auth/login", request);
         return await HandleAuthResponseAsync(response, "login");
     }
 

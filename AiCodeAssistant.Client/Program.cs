@@ -39,4 +39,8 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
+var port = Environment.GetEnvironmentVariable("PORT");
+if (port is not null)
+    app.Run($"http://0.0.0.0:{port}");
+else
+    app.Run();

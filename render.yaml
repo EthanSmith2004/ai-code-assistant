@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ai-assistant-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__CodeSightDatabase
+        sync: false  # Set in Render dashboard: server=shinkansen.proxy.rlwy.net;port=16356;database=railway;user=root;password=...;SslMode=Required
+      - key: Jwt__Issuer
+        value: CodeSight.Api
+      - key: Jwt__Audience
+        value: CodeSight.Client
+      - key: Jwt__SigningKey
+        sync: false  # Set in Render dashboard: any long random string (32+ chars)
+
+  - type: web
+    name: ai-assistant-client
+    runtime: docker
+    dockerfilePath: ./Dockerfile.client
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ApiBaseUrl
+        value: https://ai-assistant-api.onrender.com

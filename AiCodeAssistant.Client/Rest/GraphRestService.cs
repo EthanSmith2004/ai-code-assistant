@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net;
 using System.Net.Http.Json;
 using AiCodeAssistant.Client.Services;
+using Microsoft.Extensions.Configuration;
 using AiCodeAssistant.Domain.Analysis;
 using AiCodeAssistant.Domain.Contracts.Ai;
 using AiCodeAssistant.Domain.Contracts.Projects;
@@ -12,48 +13,49 @@ namespace AiCodeAssistant.Client.Services.Rest;
 
 public class GraphRestService
 {
-    private const string ApiBaseUrl = "http://localhost:5217";
+    private readonly string _apiBaseUrl;
     private readonly HttpClient _httpClient;
     private readonly AuthService _authService;
 
-    public GraphRestService(HttpClient httpClient, AuthService authService)
+    public GraphRestService(HttpClient httpClient, AuthService authService, IConfiguration configuration)
     {
         _httpClient = httpClient;
         _authService = authService;
+        _apiBaseUrl = configuration["_apiBaseUrl"] ?? "http://localhost:5217";
     }
 
     public async Task<List<GraphNode>> GetNodesAsync()
     {
         return await GetForJsonAsync<List<GraphNode>>(
-            $"{ApiBaseUrl}/api/graph/nodes",
+            $"{_apiBaseUrl}/api/graph/nodes",
             "graph nodes");
     }
 
     public async Task<List<GraphEdge>> GetEdgesAsync()
     {
         return await GetForJsonAsync<List<GraphEdge>>(
-            $"{ApiBaseUrl}/api/graph/edges",
+            $"{_apiBaseUrl}/api/graph/edges",
             "graph edges");
     }
 
     public async Task<List<CodeFlow>> GetFlowsAsync()
     {
         return await GetForJsonAsync<List<CodeFlow>>(
-            $"{ApiBaseUrl}/api/graph/flows",
+            $"{_apiBaseUrl}/api/graph/flows",
             "graph flows");
     }
 
     public async Task<List<EndpointInfo>> GetEndpointsAsync()
     {
         return await GetForJsonAsync<List<EndpointInfo>>(
-            $"{ApiBaseUrl}/api/graph/endpoints",
+            $"{_apiBaseUrl}/api/graph/endpoints",
             "graph endpoints");
     }
 
     public async Task<CodeGraph> ScanSimplifiedAsync(ProjectScanRequest request)
     {
         return await PostForJsonAsync<ProjectScanRequest, CodeGraph>(
-            $"{ApiBaseUrl}/api/analysis/scan/simplified",
+            $"{_apiBaseUrl}/api/analysis/scan/simplified",
             request,
             "simplified project scan");
     }
@@ -61,7 +63,7 @@ public class GraphRestService
     public async Task<ExplainNodeResponse> ExplainNodeAsync(ExplainNodeRequest request)
     {
         return await PostForJsonAsync<ExplainNodeRequest, ExplainNodeResponse>(
-            $"{ApiBaseUrl}/api/ai/explain-node",
+            $"{_apiBaseUrl}/api/ai/explain-node",
             request,
             "node explanation");
     }
@@ -69,7 +71,7 @@ public class GraphRestService
     public async Task<ExplainFlowResponse> ExplainFlowAsync(ExplainFlowRequest request)
     {
         return await PostForJsonAsync<ExplainFlowRequest, ExplainFlowResponse>(
-            $"{ApiBaseUrl}/api/ai/explain-flow",
+            $"{_apiBaseUrl}/api/ai/explain-flow",
             request,
             "flow explanation");
     }
@@ -77,7 +79,7 @@ public class GraphRestService
     public async Task<ExplainEndpointResponse> ExplainEndpointAsync(ExplainEndpointRequest request)
     {
         return await PostForJsonAsync<ExplainEndpointRequest, ExplainEndpointResponse>(
-            $"{ApiBaseUrl}/api/ai/explain-endpoint",
+            $"{_apiBaseUrl}/api/ai/explain-endpoint",
             request,
             "endpoint explanation");
     }
@@ -85,28 +87,28 @@ public class GraphRestService
     public async Task<List<ProjectDto>> GetProjectsAsync()
     {
         return await GetForJsonAsync<List<ProjectDto>>(
-            $"{ApiBaseUrl}/api/projects",
+            $"{_apiBaseUrl}/api/projects",
             "saved projects");
     }
 
     public async Task<List<ProjectAnalysisDto>> GetProjectAnalysesAsync(Guid projectId)
     {
         return await GetForJsonAsync<List<ProjectAnalysisDto>>(
-            $"{ApiBaseUrl}/api/projects/{projectId}/analyses",
+            $"{_apiBaseUrl}/api/projects/{projectId}/analyses",
             "project analyses");
     }
 
     public async Task<DashboardSummaryDto> GetDashboardSummaryAsync()
     {
         return await GetForJsonAsync<DashboardSummaryDto>(
-            $"{ApiBaseUrl}/api/dashboard/summary",
+            $"{_apiBaseUrl}/api/dashboard/summary",
             "dashboard summary");
     }
 
     public async Task<ProjectDto> SaveProjectAsync(SaveProjectRequest request)
     {
         return await PostForJsonAsync<SaveProjectRequest, ProjectDto>(
-            $"{ApiBaseUrl}/api/projects",
+            $"{_apiBaseUrl}/api/projects",
             request,
             "project save");
     }
@@ -114,7 +116,7 @@ public class GraphRestService
     public async Task<ProjectAnalysisDto> SaveAnalysisAsync(Guid projectId, SaveAnalysisRequest request)
     {
         return await PostForJsonAsync<SaveAnalysisRequest, ProjectAnalysisDto>(
-            $"{ApiBaseUrl}/api/projects/{projectId}/analyses",
+            $"{_apiBaseUrl}/api/projects/{projectId}/analyses",
             request,
             "analysis save");
     }
@@ -140,7 +142,7 @@ public class GraphRestService
         catch (HttpRequestException exception)
         {
             throw new InvalidOperationException(
-                $"Could not reach the API for {operation}. Make sure the API is running at {ApiBaseUrl}.",
+                $"Could not reach the API for {operation}. Make sure the API is running at {_apiBaseUrl}.",
                 exception);
         }
     }
@@ -172,7 +174,7 @@ public class GraphRestService
         catch (HttpRequestException exception)
         {
             throw new InvalidOperationException(
-                $"Could not reach the API for {operation}. Make sure the API is running at {ApiBaseUrl}.",
+                $"Could not reach the API for {operation}. Make sure the API is running at {_apiBaseUrl}.",
                 exception);
         }
     }

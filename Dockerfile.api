@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY AiCodeAssistant.API/AiCodeAssistant.API.csproj           AiCodeAssistant.API/
+COPY AiCodeAssistant.Application/AiCodeAssistant.Application.csproj AiCodeAssistant.Application/
+COPY AiCodeAssistant.Domain/AiCodeAssistant.Domain.csproj     AiCodeAssistant.Domain/
+COPY AiCodeAssistant.Infrastructure/AiCodeAssistant.Infrastructure.csproj AiCodeAssistant.Infrastructure/
+
+RUN dotnet restore AiCodeAssistant.API/AiCodeAssistant.API.csproj
+
+COPY AiCodeAssistant.API/           AiCodeAssistant.API/
+COPY AiCodeAssistant.Application/   AiCodeAssistant.Application/
+COPY AiCodeAssistant.Domain/        AiCodeAssistant.Domain/
+COPY AiCodeAssistant.Infrastructure/ AiCodeAssistant.Infrastructure/
+
+RUN dotnet publish AiCodeAssistant.API/AiCodeAssistant.API.csproj \
+    -c Release -o /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "AiCodeAssistant.API.dll"]
