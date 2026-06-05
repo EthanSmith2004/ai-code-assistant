@@ -14,8 +14,8 @@ RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
 
 # Debug: find every blazor JS file in the entire image so we know where to copy from.
 RUN echo "=== All blazor*.js files ===" \
-    && find / -name "blazor*.js" 2>/dev/null | grep -v "\.gz$" | grep -v "\.br$" \
-    && echo "=== End ==="
+    ; find / -name "blazor*.js" ! -name "*.gz" ! -name "*.br" 2>/dev/null \
+    ; echo "=== End ==="
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
