@@ -12,6 +12,12 @@ COPY AiCodeAssistant.Domain/  AiCodeAssistant.Domain/
 RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
     -c Release -o /app/publish --no-restore
 
+# blazor.web.js is a NuGet package asset that dotnet publish doesn't copy to wwwroot/.
+# Find it in the NuGet cache and place it where UseStaticFiles() can serve it.
+RUN BLAZOR=$(find /app/publish /root/.nuget/packages -name "blazor.web.js" 2>/dev/null | head -1) \
+    && mkdir -p /app/publish/wwwroot/_framework \
+    && cp "$BLAZOR" /app/publish/wwwroot/_framework/blazor.web.js
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
