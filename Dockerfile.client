@@ -12,19 +12,10 @@ COPY AiCodeAssistant.Domain/  AiCodeAssistant.Domain/
 RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
     -c Release -o /app/publish --no-restore
 
-# Find blazor.web.js (possibly fingerprinted) across publish output, obj/, and NuGet cache.
-RUN echo "=== Searching for blazor.web*.js ===" \
-    && find /app/publish /src/AiCodeAssistant.Client/obj /root/.nuget/packages \
-        \( -name "blazor.web.js" -o -name "blazor.web.*.js" \) \
-        ! -name "*.gz" ! -name "*.br" \
-        2>/dev/null \
-    && BLAZOR=$(find /app/publish /src/AiCodeAssistant.Client/obj /root/.nuget/packages \
-        \( -name "blazor.web.js" -o -name "blazor.web.*.js" \) \
-        ! -name "*.gz" ! -name "*.br" \
-        2>/dev/null | head -1) \
-    && echo "=== Using: $BLAZOR ===" \
-    && mkdir -p /app/publish/wwwroot/_framework \
-    && cp "$BLAZOR" /app/publish/wwwroot/_framework/blazor.web.js
+# Debug: find every blazor JS file in the entire image so we know where to copy from.
+RUN echo "=== All blazor*.js files ===" \
+    && find / -name "blazor*.js" 2>/dev/null | grep -v "\.gz$" | grep -v "\.br$" \
+    && echo "=== End ==="
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
