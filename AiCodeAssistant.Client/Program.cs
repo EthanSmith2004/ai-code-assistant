@@ -3,9 +3,12 @@ using AiCodeAssistant.Client.Services;
 using AiCodeAssistant.Client.Services.Managers;
 using AiCodeAssistant.Client.Services.Rest;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
