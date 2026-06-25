@@ -111,6 +111,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+// Lightweight health endpoint for the host's health check (Swagger is dev-only,
+// so it must not be used as the health path in Production).
+app.MapGet("/health", () => Results.Ok("healthy")).AllowAnonymous();
+
 var railwayPort = Environment.GetEnvironmentVariable("PORT");
 if (railwayPort is not null)
     app.Run($"http://0.0.0.0:{railwayPort}");
