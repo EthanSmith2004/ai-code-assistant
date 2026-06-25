@@ -63,7 +63,8 @@ public class CodeGraphSimplifier : ICodeGraphSimplifier
 
     private static bool IsKeyRelationship(CodeEdge edge)
     {
-        return edge.Relationship is "Uses" or "MapsTo" or "HasEntryPoint" or "ContainsProjectFile" or "ContainsConfig";
+        return edge.Relationship is "Uses" or "Imports" or "MapsTo" or "HasEntryPoint"
+            or "ContainsProjectFile" or "ContainsConfig";
     }
 
     private static int GetImportanceScore(CodeNode node)
@@ -88,6 +89,12 @@ public class CodeGraphSimplifier : ICodeGraphSimplifier
             "Project" => 45,
             "ProjectFile" => 45,
             "Config" => 45,
+            // Generic source modules are kept only when connected by a real
+            // dependency edge (handled via PreserveKeyRelationshipNodes), so they
+            // score below the standalone-importance threshold here.
+            "Module" => 30,
+            "Style" => 25,
+            "Test" => 25,
             "Folder" => 20,
             _ => 20
         };

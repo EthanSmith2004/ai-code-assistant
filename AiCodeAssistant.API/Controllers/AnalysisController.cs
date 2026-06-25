@@ -1,5 +1,7 @@
+using AiCodeAssistant.API.Samples;
 using AiCodeAssistant.Application.Interfaces;
 using AiCodeAssistant.Domain.Analysis;
+using AiCodeAssistant.Domain.Contracts.Projects;
 using AiCodeAssistant.Domain.Graph;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +22,12 @@ public class AnalysisController : ControllerBase
     {
         _codebaseAnalysisService = codebaseAnalysisService;
         _codeGraphSimplifier = codeGraphSimplifier;
+    }
+
+    [HttpGet("samples")]
+    public ActionResult<IReadOnlyList<SampleProjectDto>> Samples([FromServices] SampleCatalog sampleCatalog)
+    {
+        return Ok(sampleCatalog.GetAll());
     }
 
     [HttpPost("scan")]

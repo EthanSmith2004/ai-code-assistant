@@ -1,24 +1,38 @@
+# Render blueprint for CodeSight (API + Blazor client), free tier.
+# Database is a Supabase PostgreSQL (free tier). Set the secret values
+# (sync: false) in the Render dashboard after the first deploy.
 services:
   - type: web
-    name: ai-assistant-api
+    name: codesight-api
     runtime: docker
     dockerfilePath: ./Dockerfile.api
     dockerContext: .
     plan: free
+    healthCheckPath: /swagger/index.html
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      # Supabase Postgres connection string. Use the SESSION POOLER (IPv4) string
+      # so it works from Render and supports EF migrations, e.g.:
+      # Host=aws-0-<region>.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<db-password>;SSL Mode=Require;Trust Server Certificate=true
       - key: ConnectionStrings__CodeSightDatabase
-        sync: false  # Set in Render dashboard: server=shinkansen.proxy.rlwy.net;port=16356;database=railway;user=root;password=...;SslMode=Required
+        sync: false
       - key: Jwt__Issuer
         value: CodeSight.Api
       - key: Jwt__Audience
         value: CodeSight.Client
+      # Any long random string (32+ chars).
       - key: Jwt__SigningKey
-        sync: false  # Set in Render dashboard: any long random string (32+ chars)
+        sync: false
+      # Free Groq API key from https://console.groq.com.
+      - key: Groq__ApiKey
+        sync: false
+      # Demo codebases bundled into the image by Dockerfile.api.
+      - key: Samples__Path
+        value: /app/samples
 
   - type: web
-    name: ai-assistant-client
+    name: codesight-client
     runtime: docker
     dockerfilePath: ./Dockerfile.client
     dockerContext: .
@@ -26,5 +40,6 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      # Must match the deployed API's public URL (update after the API is live).
       - key: ApiBaseUrl
-        value: https://ai-assistant-api.onrender.com
+        value: https://codesight-api.onrender.com

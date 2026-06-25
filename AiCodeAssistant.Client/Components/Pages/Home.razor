@@ -21,25 +21,29 @@
 
         <div class="panel-body">
             <section class="source-section">
-                <h3>Graph Source</h3>
-                <div class="mode-selector" role="group" aria-label="Graph source">
-                    <button class="mode-button @(graphMode == WorkspaceGraphMode.Mock ? "selected" : null)"
-                            @onclick="() => SetGraphMode(WorkspaceGraphMode.Mock)">
-                        Mock graph
-                    </button>
-                    <button class="mode-button @(graphMode == WorkspaceGraphMode.Scanned ? "selected" : null)"
-                            @onclick="() => SetGraphMode(WorkspaceGraphMode.Scanned)">
-                        Scanned project
-                    </button>
-                </div>
+                <h3>Codebase</h3>
+                <label class="source-select-field">
+                    <span>Demo codebase</span>
+                    <select class="source-select" value="@selectedSampleId" @onchange="OnSampleSelectedAsync" aria-label="Demo codebase">
+                        <option value="">Choose a demo to scan…</option>
+                        @foreach (var sample in sampleProjects)
+                        {
+                            <option value="@sample.Id">@sample.Name · @sample.Framework (@sample.Language)</option>
+                        }
+                        <option value="@CustomSourceId">Your own codebase…</option>
+                    </select>
+                </label>
 
-                @if (graphMode == WorkspaceGraphMode.Scanned)
+                @if (selectedSampleId == CustomSourceId)
                 {
                     <label class="scan-path-field">
                         <span>Root path</span>
-                        <input @bind="scanRootPath" @bind:event="oninput" placeholder="d:\Fork\ai-code-assistant" />
-                        <small class="path-preview" title="@scanRootPath">@GetReadableRootPath()</small>
+                        <input @bind="scanRootPath" @bind:event="oninput" placeholder="d:\path\to\your\project" />
                     </label>
+                }
+                else if (SelectedSample is not null)
+                {
+                    <p class="source-hint">@SelectedSample.Description</p>
                 }
 
                 @if (!string.IsNullOrWhiteSpace(sourceHintMessage))
@@ -129,7 +133,10 @@
                                             <button class="endpoint-button @(selectedEndpoint?.NodeId == endpoint.NodeId ? "selected" : null)"
                                                     @onclick="() => SelectEndpointAsync(endpoint)">
                                                 <span>@endpoint.Route</span>
-                                                <small>@endpoint.RequestType -> @endpoint.ResponseType</small>
+                                                @if (EndpointHasSignature(endpoint))
+                                                {
+                                                    <small>@FormatEndpointType(endpoint.RequestType) → @FormatEndpointType(endpoint.ResponseType)</small>
+                                                }
                                             </button>
                                         }
                                     </div>
@@ -176,9 +183,25 @@
             </div>
             <div class="graph-toolbar" aria-label="Graph controls">
                 <span class="graph-view-chip">@GetGraphViewLabel()</span>
+                @if (IsLargeGraph)
+                {
+                    <span class="graph-size-chip" title="Large graph — use search or click a node to focus its neighbourhood">@nodes.Count nodes</span>
+                }
+                <div class="graph-search">
+                    <input class="graph-search-input" placeholder="Search nodes…" @bind="searchQuery" @bind:event="oninput"
+                           @onkeydown="OnSearchKeyDownAsync" disabled="@(!nodes.Any())" aria-label="Search nodes" />
+                    <button class="graph-search-button" @onclick="SearchNodeAsync"
+                            disabled="@(!nodes.Any() || string.IsNullOrWhiteSpace(searchQuery))" aria-label="Find node" title="Find node">
+                        Find
+                    </button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(searchMessage))
+                {
+                    <span class="graph-search-message">@searchMessage</span>
+                }
                 <select class="layout-select" value="@selectedLayout" @onchange="ChangeLayoutAsync" aria-label="Graph layout">
-                    <option value="breadthfirst">Layered</option>
                     <option value="cose">Organic</option>
+                    <option value="breadthfirst">Layered</option>
                 </select>
                 <button class="save-analysis-button" @onclick="SaveCurrentAnalysisAsync" disabled="@(!CanSaveAnalysis)">
                     @(isSavingAnalysis ? "Saving..." : "Save analysis")
@@ -220,6 +243,15 @@
             <div class="graph-stage">
                 <div class="graph-stage-body">
                     <div id="graph" class="graph-canvas"></div>
+                    @if (!FullGraphEnabled && nodes.Any() && graphViewMode == GraphViewMode.Full)
+                    {
+                        <div class="graph-placeholder">
+                            <span class="label-caps">Graph view</span>
+                            <p>@(flows.Any() || endpoints.Any()
+                                ? "Select a flow or endpoint from the left panel to visualize it."
+                                : "No flows or endpoints were detected in this project to visualize.")</p>
+                        </div>
+                    }
                     <div class="graph-floating-controls" role="toolbar" aria-label="Graph navigation controls">
                         <button class="graph-icon-button" @onclick="ZoomOutAsync" disabled="@(!nodes.Any())" aria-label="Zoom out" title="Zoom out">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -251,16 +283,19 @@
                                 <path d="M6 5v4h4"></path>
                             </svg>
                         </button>
-                        <button class="graph-icon-button" @onclick="ShowFullGraphAsync" disabled="@(!nodes.Any() || graphViewMode == GraphViewMode.Full)" aria-label="Show full graph" title="Show full graph">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <circle cx="6" cy="7" r="2"></circle>
-                                <circle cx="18" cy="7" r="2"></circle>
-                                <circle cx="12" cy="17" r="2"></circle>
-                                <path d="M8 8l3 7"></path>
-                                <path d="M16 8l-3 7"></path>
-                                <path d="M8 7h8"></path>
-                            </svg>
-                        </button>
+                        @if (FullGraphEnabled)
+                        {
+                            <button class="graph-icon-button" @onclick="ShowFullGraphAsync" disabled="@(!nodes.Any() || graphViewMode == GraphViewMode.Full)" aria-label="Show full graph" title="Show full graph">
+                                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <circle cx="6" cy="7" r="2"></circle>
+                                    <circle cx="18" cy="7" r="2"></circle>
+                                    <circle cx="12" cy="17" r="2"></circle>
+                                    <path d="M8 8l3 7"></path>
+                                    <path d="M16 8l-3 7"></path>
+                                    <path d="M8 7h8"></path>
+                                </svg>
+                            </button>
+                        }
                         <button class="graph-icon-button" @onclick="ToggleFullscreenAsync" disabled="@(!nodes.Any())" aria-label="Toggle fullscreen" title="Toggle fullscreen">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path d="M8 4H4v4"></path>
@@ -656,14 +691,17 @@
                         <dt>Route</dt>
                         <dd>@selectedEndpoint.Route</dd>
                     </div>
-                    <div>
-                        <dt>Request Type</dt>
-                        <dd>@selectedEndpoint.RequestType</dd>
-                    </div>
-                    <div>
-                        <dt>Response Type</dt>
-                        <dd>@selectedEndpoint.ResponseType</dd>
-                    </div>
+                    @if (EndpointHasSignature(selectedEndpoint))
+                    {
+                        <div>
+                            <dt>Request Type</dt>
+                            <dd>@FormatEndpointType(selectedEndpoint.RequestType)</dd>
+                        </div>
+                        <div>
+                            <dt>Response Type</dt>
+                            <dd>@FormatEndpointType(selectedEndpoint.ResponseType)</dd>
+                        </div>
+                    }
                     <div>
                         <dt>Graph View</dt>
                         <dd>@GetGraphViewLabel()</dd>
@@ -757,10 +795,24 @@
     private List<NodeHotspot> hotspots = new();
     private Dictionary<string, CodeNode> scannedNodesById = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, CodeEdge> scannedEdgesById = new(StringComparer.OrdinalIgnoreCase);
-    private WorkspaceGraphMode graphMode = WorkspaceGraphMode.Mock;
+    private WorkspaceGraphMode graphMode = WorkspaceGraphMode.Scanned;
     private GraphViewMode graphViewMode = GraphViewMode.Full;
-    private string selectedLayout = "breadthfirst";
-    private string scanRootPath = @"d:\Fork\ai-code-assistant";
+    private string selectedLayout = "cose";
+    private string scanRootPath = string.Empty;
+    private List<SampleProjectDto> sampleProjects = new();
+    private string selectedSampleId = string.Empty;
+    private const string CustomSourceId = "__custom__";
+    private SampleProjectDto? SelectedSample => sampleProjects.FirstOrDefault(sample => sample.Id == selectedSampleId);
+    private string searchQuery = string.Empty;
+    private string searchMessage = string.Empty;
+    private const int LargeGraphThreshold = 70;
+    private bool IsLargeGraph => nodes.Count > LargeGraphThreshold;
+
+    // The full codebase graph is disabled for now: it does not display well at
+    // scale, so only flow/endpoint focus views are shown. Flip to true to bring
+    // the full-graph view (and its toolbar button) back.
+    private static readonly bool FullGraphEnabled = false;
+
     private string? appliedSourceIdentifier;
     private string sourceHintMessage = string.Empty;
     private string loadError = string.Empty;
@@ -805,7 +857,43 @@
         }
 
         selectedLayout = await UserPreferencesService.GetDefaultGraphLayoutAsync();
+        await LoadSamplesAsync();
         StateHasChanged();
+    }
+
+    private async Task LoadSamplesAsync()
+    {
+        try
+        {
+            sampleProjects = await GraphServiceManager.GetSamplesAsync();
+        }
+        catch
+        {
+            // Demo codebases are optional — ignore failures (e.g. samples folder missing).
+        }
+    }
+
+    private async Task OnSampleSelectedAsync(ChangeEventArgs args)
+    {
+        selectedSampleId = args.Value?.ToString() ?? string.Empty;
+
+        if (selectedSampleId == CustomSourceId)
+        {
+            graphMode = WorkspaceGraphMode.Scanned;
+            scanRootPath = string.Empty;
+            return;
+        }
+
+        var sample = SelectedSample;
+        if (sample is null)
+        {
+            return;
+        }
+
+        // Picking a demo scans it immediately.
+        graphMode = WorkspaceGraphMode.Scanned;
+        scanRootPath = sample.Path;
+        await LoadData();
     }
 
     private async Task LoadData()
@@ -830,11 +918,33 @@
             graphViewMode = GraphViewMode.Full;
             ClearSaveStatus();
             sourceHintMessage = string.Empty;
+            searchQuery = string.Empty;
+            searchMessage = string.Empty;
+
+            // Large graphs are forced onto the organic (fcose) layout because the
+            // layered layout is unreadable at scale; keep the picker in sync.
+            if (IsLargeGraph)
+            {
+                selectedLayout = "cose";
+            }
+
             ClearNodeExplanation();
             ClearFlowExplanation();
             ClearEndpointExplanation();
 
-            await RenderCurrentGraphAsync();
+            if (!FullGraphEnabled && flows.Any())
+            {
+                // Full graph is disabled, so open straight into the first flow.
+                await SelectFlowAsync(flows.First());
+            }
+            else if (!FullGraphEnabled && endpoints.Any())
+            {
+                await SelectEndpointAsync(endpoints.First());
+            }
+            else
+            {
+                await RenderCurrentGraphAsync();
+            }
         }
         catch (Exception exception)
         {
@@ -928,8 +1038,27 @@
     private string GetNoEndpointsMessage()
     {
         return graphMode == WorkspaceGraphMode.Scanned
-            ? "No ASP.NET Core endpoints detected yet."
+            ? "No HTTP endpoints detected in this project."
             : "No endpoints available.";
+    }
+
+    // Request/response types are only inferred for some stacks (e.g. ASP.NET Core).
+    // When unknown we hide the signature rather than showing "None -> Unknown".
+    private static bool HasRealEndpointType(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+               && !value.Equals("None", StringComparison.OrdinalIgnoreCase)
+               && !value.Equals("Unknown", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool EndpointHasSignature(EndpointInfo endpoint)
+    {
+        return HasRealEndpointType(endpoint.RequestType) || HasRealEndpointType(endpoint.ResponseType);
+    }
+
+    private static string FormatEndpointType(string? value)
+    {
+        return HasRealEndpointType(value) ? value! : "—";
     }
 
     private string GetWorkflowStepClass(int step)
@@ -1032,6 +1161,25 @@
     private async Task ToggleFullscreenAsync()
     {
         await JS.InvokeVoidAsync("graphInterop.toggleFullscreen");
+    }
+
+    private async Task OnSearchKeyDownAsync(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SearchNodeAsync();
+        }
+    }
+
+    private async Task SearchNodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery) || !nodes.Any())
+        {
+            return;
+        }
+
+        var found = await JS.InvokeAsync<bool>("graphInterop.focusNodeByQuery", searchQuery);
+        searchMessage = found ? string.Empty : $"No node matching “{searchQuery.Trim()}”.";
     }
 
     private async Task ChangeLayoutAsync(Microsoft.AspNetCore.Components.ChangeEventArgs args)
@@ -1238,6 +1386,13 @@
 
     private IEnumerable<GraphNode> GetVisibleGraphNodes()
     {
+        if (!FullGraphEnabled && graphViewMode == GraphViewMode.Full)
+        {
+            // Full codebase graph is disabled — render nothing until a flow or
+            // endpoint is selected.
+            return Enumerable.Empty<GraphNode>();
+        }
+
         var visibleNodeIds = GetCurrentViewNodeIds();
         var visibleNodes = visibleNodeIds is null
             ? nodes

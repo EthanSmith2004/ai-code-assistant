@@ -18,7 +18,9 @@ public class AuthService
     {
         _httpClient = httpClient;
         _authenticationStateProvider = authenticationStateProvider;
-        _apiBaseUrl = configuration["_apiBaseUrl"] ?? "http://localhost:5217";
+        _apiBaseUrl = configuration["ApiBaseUrl"]
+            ?? configuration["_apiBaseUrl"]
+            ?? "http://localhost:5217";
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)

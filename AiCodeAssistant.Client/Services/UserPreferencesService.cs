@@ -5,7 +5,7 @@ namespace AiCodeAssistant.Client.Services;
 public class UserPreferencesService
 {
     private const string DefaultGraphLayoutKey = "codesight.defaultGraphLayout";
-    private const string DefaultGraphLayout = "breadthfirst";
+    private const string DefaultGraphLayout = "cose";
     private readonly IJSRuntime _jsRuntime;
 
     public UserPreferencesService(IJSRuntime jsRuntime)
@@ -41,8 +41,8 @@ public class UserPreferencesService
 
     public static string NormalizeGraphLayout(string? layout)
     {
-        return string.Equals(layout, "cose", StringComparison.OrdinalIgnoreCase)
-            ? "cose"
+        return string.Equals(layout, "breadthfirst", StringComparison.OrdinalIgnoreCase)
+            ? "breadthfirst"
             : DefaultGraphLayout;
     }
 }

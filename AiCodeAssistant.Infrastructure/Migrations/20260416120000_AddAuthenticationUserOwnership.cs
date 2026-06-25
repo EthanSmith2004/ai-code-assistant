@@ -19,10 +19,10 @@ namespace AiCodeAssistant.Infrastructure.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
-                    Email = table.Column<string>(type: "varchar(320)", maxLength: 320, nullable: false),
-                    PasswordHash = table.Column<string>(type: "varchar(600)", maxLength: 600, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(600)", maxLength: 600, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -31,8 +31,8 @@ namespace AiCodeAssistant.Infrastructure.Migrations
 
             migrationBuilder.Sql(
                 $"""
-                INSERT INTO `Users` (`Id`, `Email`, `PasswordHash`, `CreatedAt`)
-                VALUES ('{LegacyUserId}', 'legacy@codesight.local', 'legacy-migration-placeholder', '2026-04-16 00:00:00.000000');
+                INSERT INTO "Users" ("Id", "Email", "PasswordHash", "CreatedAt")
+                VALUES ('{LegacyUserId}'::uuid, 'legacy@codesight.local', 'legacy-migration-placeholder', '2026-04-16T00:00:00Z'::timestamp with time zone);
                 """);
 
             migrationBuilder.DropIndex(
@@ -42,18 +42,18 @@ namespace AiCodeAssistant.Infrastructure.Migrations
             migrationBuilder.AddColumn<Guid>(
                 name: "UserId",
                 table: "Projects",
-                type: "char(36)",
+                type: "uuid",
                 nullable: true);
 
-            migrationBuilder.Sql($"UPDATE Projects SET UserId = '{LegacyUserId}' WHERE UserId IS NULL;");
+            migrationBuilder.Sql($"""UPDATE "Projects" SET "UserId" = '{LegacyUserId}'::uuid WHERE "UserId" IS NULL;""");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UserId",
                 table: "Projects",
-                type: "char(36)",
+                type: "uuid",
                 nullable: false,
                 oldClrType: typeof(Guid),
-                oldType: "char(36)",
+                oldType: "uuid",
                 oldNullable: true);
 
             migrationBuilder.CreateIndex(

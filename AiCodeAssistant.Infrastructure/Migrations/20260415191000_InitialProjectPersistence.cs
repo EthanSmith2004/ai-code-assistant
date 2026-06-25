@@ -17,12 +17,12 @@ namespace AiCodeAssistant.Infrastructure.Migrations
                 name: "Projects",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
-                    Name = table.Column<string>(type: "varchar(200)", maxLength: 200, nullable: false),
-                    FrameworkType = table.Column<string>(type: "varchar(120)", maxLength: 120, nullable: false),
-                    SourceIdentifier = table.Column<string>(type: "varchar(600)", maxLength: 600, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    FrameworkType = table.Column<string>(type: "character varying(120)", maxLength: 120, nullable: false),
+                    SourceIdentifier = table.Column<string>(type: "character varying(600)", maxLength: 600, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -33,14 +33,14 @@ namespace AiCodeAssistant.Infrastructure.Migrations
                 name: "Analyses",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "char(36)", nullable: false),
-                    ProjectId = table.Column<Guid>(type: "char(36)", nullable: false),
-                    Summary = table.Column<string>(type: "varchar(1200)", maxLength: 1200, nullable: false),
-                    FileCount = table.Column<int>(type: "int", nullable: false),
-                    NodeCount = table.Column<int>(type: "int", nullable: false),
-                    EdgeCount = table.Column<int>(type: "int", nullable: false),
-                    EndpointCount = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Summary = table.Column<string>(type: "character varying(1200)", maxLength: 1200, nullable: false),
+                    FileCount = table.Column<int>(type: "integer", nullable: false),
+                    NodeCount = table.Column<int>(type: "integer", nullable: false),
+                    EdgeCount = table.Column<int>(type: "integer", nullable: false),
+                    EndpointCount = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {

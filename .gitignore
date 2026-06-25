@@ -25,6 +25,9 @@ out-*/
 appsettings.Production.json
 appsettings.Staging.json
 
+## Claude Code personal/local settings (per-machine, not for the team repo)
+.claude/settings.local.json
+
 ## Logs
 *.log
 

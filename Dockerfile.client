@@ -12,11 +12,6 @@ COPY AiCodeAssistant.Domain/  AiCodeAssistant.Domain/
 RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
     -c Release -o /app/publish --no-restore
 
-# Debug: find every blazor JS file in the entire image so we know where to copy from.
-RUN echo "=== All blazor*.js files ===" \
-    ; find / -name "blazor*.js" ! -name "*.gz" ! -name "*.br" 2>/dev/null \
-    ; echo "=== End ==="
-
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .

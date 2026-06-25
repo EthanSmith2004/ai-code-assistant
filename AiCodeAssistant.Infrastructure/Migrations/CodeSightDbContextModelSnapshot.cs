@@ -14,35 +14,35 @@ namespace AiCodeAssistant.Infrastructure.Migrations
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.6")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.Analysis", builder =>
             {
                 builder.Property<Guid>("Id")
-                    .HasColumnType("char(36)");
+                    .HasColumnType("uuid");
 
                 builder.Property<DateTime>("CreatedAt")
-                    .HasColumnType("datetime(6)");
+                    .HasColumnType("timestamp with time zone");
 
                 builder.Property<int>("EdgeCount")
-                    .HasColumnType("int");
+                    .HasColumnType("integer");
 
                 builder.Property<int>("EndpointCount")
-                    .HasColumnType("int");
+                    .HasColumnType("integer");
 
                 builder.Property<int>("FileCount")
-                    .HasColumnType("int");
+                    .HasColumnType("integer");
 
                 builder.Property<int>("NodeCount")
-                    .HasColumnType("int");
+                    .HasColumnType("integer");
 
                 builder.Property<Guid>("ProjectId")
-                    .HasColumnType("char(36)");
+                    .HasColumnType("uuid");
 
                 builder.Property<string>("Summary")
                     .IsRequired()
                     .HasMaxLength(1200)
-                    .HasColumnType("varchar(1200)");
+                    .HasColumnType("character varying(1200)");
 
                 builder.HasKey("Id");
 
@@ -56,31 +56,31 @@ namespace AiCodeAssistant.Infrastructure.Migrations
             modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.Project", builder =>
             {
                 builder.Property<Guid>("Id")
-                    .HasColumnType("char(36)");
+                    .HasColumnType("uuid");
 
                 builder.Property<DateTime>("CreatedAt")
-                    .HasColumnType("datetime(6)");
+                    .HasColumnType("timestamp with time zone");
 
                 builder.Property<string>("FrameworkType")
                     .IsRequired()
                     .HasMaxLength(120)
-                    .HasColumnType("varchar(120)");
+                    .HasColumnType("character varying(120)");
 
                 builder.Property<string>("Name")
                     .IsRequired()
                     .HasMaxLength(200)
-                    .HasColumnType("varchar(200)");
+                    .HasColumnType("character varying(200)");
 
                 builder.Property<string>("SourceIdentifier")
                     .IsRequired()
                     .HasMaxLength(600)
-                    .HasColumnType("varchar(600)");
+                    .HasColumnType("character varying(600)");
 
                 builder.Property<Guid>("UserId")
-                    .HasColumnType("char(36)");
+                    .HasColumnType("uuid");
 
                 builder.Property<DateTime>("UpdatedAt")
-                    .HasColumnType("datetime(6)");
+                    .HasColumnType("timestamp with time zone");
 
                 builder.HasKey("Id");
 
@@ -95,20 +95,20 @@ namespace AiCodeAssistant.Infrastructure.Migrations
             modelBuilder.Entity("AiCodeAssistant.Domain.Persistence.User", builder =>
             {
                 builder.Property<Guid>("Id")
-                    .HasColumnType("char(36)");
+                    .HasColumnType("uuid");
 
                 builder.Property<DateTime>("CreatedAt")
-                    .HasColumnType("datetime(6)");
+                    .HasColumnType("timestamp with time zone");
 
                 builder.Property<string>("Email")
                     .IsRequired()
                     .HasMaxLength(320)
-                    .HasColumnType("varchar(320)");
+                    .HasColumnType("character varying(320)");
 
                 builder.Property<string>("PasswordHash")
                     .IsRequired()
                     .HasMaxLength(600)
-                    .HasColumnType("varchar(600)");
+                    .HasColumnType("character varying(600)");
 
                 builder.HasKey("Id");
 

@@ -19,4 +19,7 @@ RUN dotnet publish AiCodeAssistant.API/AiCodeAssistant.API.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
+# Bundle the demo codebases so the "Demo codebase" dropdown works in the cloud.
+# SampleCatalog reads Samples__Path (set in render.yaml) or falls back to /app/samples.
+COPY samples/ ./samples/
 ENTRYPOINT ["dotnet", "AiCodeAssistant.API.dll"]

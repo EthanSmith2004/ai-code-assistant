@@ -41,6 +41,11 @@ public class GraphServiceManager
         return await _graphRestService.ScanSimplifiedAsync(request);
     }
 
+    public async Task<List<SampleProjectDto>> GetSamplesAsync()
+    {
+        return await _graphRestService.GetSamplesAsync();
+    }
+
     public async Task<ExplainNodeResponse> ExplainNodeAsync(ExplainNodeRequest request)
     {
         return await _graphRestService.ExplainNodeAsync(request);

@@ -21,7 +21,9 @@ public class GraphRestService
     {
         _httpClient = httpClient;
         _authService = authService;
-        _apiBaseUrl = configuration["_apiBaseUrl"] ?? "http://localhost:5217";
+        _apiBaseUrl = configuration["ApiBaseUrl"]
+            ?? configuration["_apiBaseUrl"]
+            ?? "http://localhost:5217";
     }
 
     public async Task<List<GraphNode>> GetNodesAsync()
@@ -58,6 +60,13 @@ public class GraphRestService
             $"{_apiBaseUrl}/api/analysis/scan/simplified",
             request,
             "simplified project scan");
+    }
+
+    public async Task<List<SampleProjectDto>> GetSamplesAsync()
+    {
+        return await GetForJsonAsync<List<SampleProjectDto>>(
+            $"{_apiBaseUrl}/api/analysis/samples",
+            "demo codebases");
     }
 
     public async Task<ExplainNodeResponse> ExplainNodeAsync(ExplainNodeRequest request)

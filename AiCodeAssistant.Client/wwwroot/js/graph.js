@@ -1,6 +1,8 @@
 let currentGraph = null;
 let currentLayoutName = 'breadthfirst';
 let currentViewMode = 'Full';
+let currentDotNetHelper = null;
+let currentIsLargeGraph = false;
 let graphResizeObserver = null;
 let graphFitTimeout = null;
 let graphFitFrame = null;
@@ -12,7 +14,27 @@ let horizontalPanThumb = null;
 let verticalPanBar = null;
 let verticalPanThumb = null;
 
-const focusClassNames = 'selected-node neighbor-node connected-edge dimmed-element flow-node flow-edge flow-dimmed-element endpoint-node endpoint-path-node endpoint-path-edge endpoint-dimmed-element hotspot-node hotspot-dimmed-element';
+// Above this node count the graph switches into "large graph" behaviour:
+// force-directed layout, viewport texturing, and hidden edge labels.
+const LARGE_GRAPH_THRESHOLD = 70;
+
+// Register the fcose force-directed layout if the plugin loaded. It untangles
+// big dependency graphs far better than the built-in cose/breadthfirst layouts.
+const fcoseAvailable = (() => {
+    if (typeof cytoscape === 'undefined' || typeof cytoscapeFcose === 'undefined') {
+        return false;
+    }
+
+    try {
+        cytoscape.use(cytoscapeFcose);
+        return true;
+    } catch (error) {
+        // Already registered (or failed) - fall back to built-in layouts.
+        return /already/i.test(String(error && error.message));
+    }
+})();
+
+const focusClassNames ='selected-node neighbor-node connected-edge dimmed-element flow-node flow-edge flow-dimmed-element endpoint-node endpoint-path-node endpoint-path-edge endpoint-dimmed-element hotspot-node hotspot-dimmed-element';
 const graphMotion = {
     loadDuration: 320,
     focusDuration: 230,
@@ -83,14 +105,41 @@ const getOption = (options, name, fallback) => {
 const isFocusView = viewMode => viewMode === 'FlowFocus' || viewMode === 'EndpointFocus';
 const normalizeLayoutName = layoutName => layoutName === 'cose' ? 'cose' : 'breadthfirst';
 
-const createLayoutOptions = (layoutName, viewMode) => {
+const createLayoutOptions = (layoutName, viewMode, nodeCount = 0) => {
     const focusView = isFocusView(viewMode);
     const padding = focusView ? 34 : 46;
+    const isLarge = nodeCount > LARGE_GRAPH_THRESHOLD;
+
+    // The "Layered" (breadthfirst) layout collapses big dependency graphs into an
+    // unreadable horizontal strip, so any large graph uses force-directed fcose.
+    if (isLarge && fcoseAvailable) {
+        layoutName = 'cose';
+    }
+
+    if (layoutName === 'cose' && fcoseAvailable) {
+        return {
+            name: 'fcose',
+            quality: nodeCount > 400 ? 'draft' : 'default',
+            animate: !isLarge,
+            animationDuration: focusView ? 240 : 320,
+            animationEasing: graphMotion.easing,
+            randomize: true,
+            fit: false,
+            padding,
+            packComponents: true,
+            nodeRepulsion: focusView ? 4500 : (isLarge ? 8200 : 6500),
+            idealEdgeLength: focusView ? 90 : (isLarge ? 135 : 120),
+            nodeSeparation: focusView ? 60 : (isLarge ? 105 : 85),
+            gravity: isLarge ? 0.15 : 0.25,
+            gravityRange: 3.8,
+            numIter: nodeCount > 400 ? 1200 : 2500
+        };
+    }
 
     if (layoutName === 'cose') {
         return {
             name: 'cose',
-            animate: true,
+            animate: !isLarge,
             animationDuration: focusView ? 240 : 320,
             animationEasing: graphMotion.easing,
             fit: false,
@@ -319,7 +368,7 @@ const runGraphLayoutAndFit = (graph, layoutName, viewMode) => {
 
     graphLayoutReady = false;
     const layoutRunId = ++graphLayoutRunId;
-    const layout = graph.layout(createLayoutOptions(normalizeLayoutName(layoutName), viewMode));
+    const layout = graph.layout(createLayoutOptions(normalizeLayoutName(layoutName), viewMode, graph.nodes().length));
 
     graph.one('layoutstop', () => {
         if (layoutRunId !== graphLayoutRunId || graph !== currentGraph || isGraphDestroyed(graph)) {
@@ -879,6 +928,12 @@ const graphStyle = [
         }
     },
     {
+        selector: 'edge.lod-hide-label',
+        style: {
+            'text-opacity': 0
+        }
+    },
+    {
         selector: 'node.selected-node',
         style: {
             'border-color': '#f8fafc',
@@ -1070,6 +1125,10 @@ window.graphInterop = {
         const layoutName = normalizeLayoutName(getOption(options, 'layout', 'breadthfirst'));
         currentLayoutName = layoutName;
         currentViewMode = viewMode;
+        currentDotNetHelper = dotNetHelper ?? null;
+
+        const nodeCount = nodes.length;
+        currentIsLargeGraph = nodeCount > LARGE_GRAPH_THRESHOLD;
 
         const cy = cytoscape({
             container: existing,
@@ -1081,16 +1140,26 @@ window.graphInterop = {
             layout: {
                 name: 'preset'
             },
-            minZoom: 0.12,
+            minZoom: nodeCount > 120 ? 0.05 : 0.12,
             maxZoom: 2.4,
             wheelSensitivity: 0.08,
             userZoomingEnabled: false,
             userPanningEnabled: false,
             boxSelectionEnabled: false,
-            autoungrabify: true
+            autoungrabify: true,
+            // Performance options that matter once the graph gets big.
+            hideEdgesOnViewport: nodeCount > 90,
+            textureOnViewport: nodeCount > 140,
+            motionBlur: nodeCount > 90,
+            pixelRatio: nodeCount > 240 ? 1 : 'auto'
         });
 
         currentGraph = cy;
+
+        // Declutter large graphs: hide edge labels until a node is focused.
+        if (currentIsLargeGraph) {
+            cy.edges().addClass('lod-hide-label');
+        }
         attachFullscreenListener();
         attachResizeObserver(existing);
         attachWheelNavigation(existing);
@@ -1223,5 +1292,46 @@ window.graphInterop = {
         currentGraph.nodes().difference(hotspotNodes).addClass('hotspot-dimmed-element');
 
         animateGraphFit(currentGraph, hotspotNodes, graphMotion.focusPadding, graphMotion.focusDuration, 'EndpointFocus');
+    },
+
+    focusNodeByQuery: query => {
+        if (!currentGraph || !query) {
+            return false;
+        }
+
+        const needle = String(query).trim().toLowerCase();
+        if (!needle) {
+            return false;
+        }
+
+        let exactMatch = null;
+        let prefixMatch = null;
+        let containsMatch = null;
+
+        currentGraph.nodes().forEach(node => {
+            const label = String(node.data('label') || '').toLowerCase();
+            if (!label) {
+                return;
+            }
+
+            if (!exactMatch && label === needle) {
+                exactMatch = node;
+            } else if (!prefixMatch && label.startsWith(needle)) {
+                prefixMatch = node;
+            } else if (!containsMatch && label.includes(needle)) {
+                containsMatch = node;
+            }
+        });
+
+        const match = exactMatch || prefixMatch || containsMatch;
+        if (!match) {
+            return false;
+        }
+
+        // Reuse the click-focus behaviour: highlight the node's neighbourhood,
+        // dim the rest, zoom to it, and tell Blazor to open its details.
+        applySelectionStyle(match);
+        currentDotNetHelper?.invokeMethodAsync('OnNodeSelected', match.id());
+        return true;
     }
 };
