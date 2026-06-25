@@ -9,8 +9,17 @@ RUN dotnet restore AiCodeAssistant.Client/AiCodeAssistant.Client.csproj
 COPY AiCodeAssistant.Client/ AiCodeAssistant.Client/
 COPY AiCodeAssistant.Domain/  AiCodeAssistant.Domain/
 
+# Drop any host-built bin/obj that came in via the build context. The Windows
+# obj/ holds static-web-asset manifests pointing at C:\ paths that don't exist
+# here, which makes publish silently drop _framework/* (blazor.web.js). This is
+# belt-and-suspenders with .dockerignore (which a cached COPY layer can bypass).
+RUN rm -rf AiCodeAssistant.Client/bin AiCodeAssistant.Client/obj \
+           AiCodeAssistant.Domain/bin AiCodeAssistant.Domain/obj
+
+# No --no-restore: restore fresh on Linux so the static-web-asset manifest is
+# rebuilt with valid container paths and _framework/* is included.
 RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
-    -c Release -o /app/publish --no-restore
+    -c Release -o /app/publish
 
 # Fail loudly if the Blazor framework assets didn't make it into the publish
 # output (e.g. a polluted obj/ cache). Without blazor.web.js the app boots to a
