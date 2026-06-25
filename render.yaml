@@ -40,6 +40,8 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      # Must match the deployed API's public URL (update after the API is live).
+      # Must match the deployed API's public URL (Render appends a random
+      # suffix to the service name, e.g. -hqpp). Keep this in sync with the
+      # actual API URL shown in the Render dashboard.
       - key: ApiBaseUrl
-        value: https://codesight-api.onrender.com
+        value: https://codesight-api-hqpp.onrender.com
