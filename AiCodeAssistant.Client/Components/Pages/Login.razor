@@ -9,7 +9,8 @@
         <h1>Welcome back</h1>
         <p>Log in to open your workspace.</p>
 
-        <EditForm Model="loginModel" OnValidSubmit="HandleLoginAsync" class="auth-form">
+        <EditForm Model="loginModel" FormName="login" OnValidSubmit="HandleLoginAsync" class="auth-form">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -49,7 +50,8 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
-    private readonly LoginRequest loginModel = new();
+    [SupplyParameterFromForm(FormName = "login")]
+    private LoginRequest loginModel { get; set; } = new();
     private bool isSubmitting;
     private string authError = string.Empty;
     private string statusMessage = string.Empty;

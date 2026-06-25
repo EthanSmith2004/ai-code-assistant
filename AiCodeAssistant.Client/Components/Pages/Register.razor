@@ -9,7 +9,8 @@
         <h1>Create your account</h1>
         <p>Start with a private workspace for your projects and analyses.</p>
 
-        <EditForm Model="registerModel" OnValidSubmit="HandleRegisterAsync" class="auth-form">
+        <EditForm Model="registerModel" FormName="register" OnValidSubmit="HandleRegisterAsync" class="auth-form">
+            <AntiforgeryToken />
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -54,8 +55,11 @@
     [SupplyParameterFromQuery(Name = "returnUrl")]
     public string? ReturnUrl { get; set; }
 
-    private readonly RegisterRequest registerModel = new();
-    private string confirmPassword = string.Empty;
+    [SupplyParameterFromForm(FormName = "register")]
+    private RegisterRequest registerModel { get; set; } = new();
+
+    [SupplyParameterFromForm(FormName = "register")]
+    private string confirmPassword { get; set; } = string.Empty;
     private bool isSubmitting;
     private string authError = string.Empty;
     private string statusMessage = string.Empty;
