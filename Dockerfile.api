@@ -18,6 +18,13 @@ RUN dotnet publish AiCodeAssistant.API/AiCodeAssistant.API.csproj \
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
+# Npgsql probes for the Kerberos/GSSAPI library when connecting to PostgreSQL;
+# the minimal .NET runtime image omits it, which logs
+# "libgssapi_krb5.so.2: cannot open shared object file" and can disrupt the
+# connection. Install it so the Supabase connect is clean.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 # Bundle the demo codebases so the "Demo codebase" dropdown works in the cloud.
 # SampleCatalog reads Samples__Path (set in render.yaml) or falls back to /app/samples.
