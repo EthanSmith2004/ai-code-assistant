@@ -12,6 +12,13 @@ COPY AiCodeAssistant.Domain/  AiCodeAssistant.Domain/
 RUN dotnet publish AiCodeAssistant.Client/AiCodeAssistant.Client.csproj \
     -c Release -o /app/publish --no-restore
 
+# Fail loudly if the Blazor framework assets didn't make it into the publish
+# output (e.g. a polluted obj/ cache). Without blazor.web.js the app boots to a
+# blank page, so never ship an image missing it.
+RUN test -f /app/publish/wwwroot/_framework/blazor.web.js \
+    || (echo "ERROR: _framework/blazor.web.js missing from publish output" \
+        && ls -la /app/publish/wwwroot/_framework 2>/dev/null; exit 1)
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app/publish .

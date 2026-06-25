@@ -1,0 +1,23 @@
+# Keep local build artifacts OUT of the Docker build context.
+#
+# Without this, `COPY <project>/ <project>/` copies the host's bin/ and obj/
+# into the image. The Windows obj/ contains static-web-asset manifests
+# (staticwebassets.build.json) that reference framework assets by absolute
+# host paths, e.g.
+#   C:\Users\...\.nuget\packages\microsoft.aspnetcore.app.internal.assets\...\_framework\blazor.web.js
+# On the Linux build those paths don't exist, so `dotnet publish --no-restore`
+# silently drops _framework/* (blazor.web.js, blazor.server.js) from wwwroot.
+# Excluding bin/obj forces the container to use its own clean restore.
+**/bin/
+**/obj/
+
+# VCS / CI / IDE / local tooling — not needed in the image.
+.git/
+.github/
+.vs/
+.vscode/
+**/*.user
+.temp/
+.tempbuild/
+.agents/
+.claude/
